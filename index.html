@@ -259,7 +259,7 @@
     <div class="container">
         <header>
             <div class="app-title">⚡ BITCOIN MATRIX PRO</div>
-            <div class="subtitle">Live Technical Indicator Sync & Decision Engine</div>
+            <div class="subtitle">Multi-Timeframe & Bollinger Band Decision Engine</div>
         </header>
 
         <!-- Live Feeds Banner -->
@@ -293,7 +293,7 @@
         <!-- Macro Inputs -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">2. Macro Metrics</div>
+                <div class="card-title">2. Macro & Institutional Filters</div>
             </div>
             <div class="form-group">
                 <label for="fedwatch">CME FedWatch: Cut/Pause Probability (%)</label>
@@ -317,7 +317,7 @@
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    3. Technical Indicators
+                    3. Technical Indicators & Bands
                     <span id="syncBadge" class="status-badge badge-success">AUTO READY</span>
                 </div>
                 <button class="btn-sync" onclick="syncAllTechnicalsForTimeframe()">🔄 Auto Sync</button>
@@ -326,10 +326,10 @@
             <div class="form-group">
                 <label for="timeframe">Select Timeframe Mode</label>
                 <select id="timeframe" onchange="onTimeframeChange()">
-                    <option value="1m">1 Minute (Scalp Mode: BB %B & RSI)</option>
-                    <option value="5m" selected>5 Minutes (Scalp Mode: BB %B & RSI)</option>
-                    <option value="15m">15 Minutes (Intraday: SMA20 & MACD)</option>
-                    <option value="1h">1 Hour (Intraday: SMA20 & MACD)</option>
+                    <option value="1m">1 Minute (Small Turnover Scalp Mode)</option>
+                    <option value="5m" selected>5 Minutes (Small Turnover Scalp Mode)</option>
+                    <option value="15m">15 Minutes (Larger Turnover Intraday)</option>
+                    <option value="1h">1 Hour (Larger Turnover Intraday)</option>
                     <option value="4h">4 Hours (Macro Swing Mode)</option>
                     <option value="1d">1 Day (Macro Swing Mode)</option>
                 </select>
@@ -367,7 +367,19 @@
                 </div>
             </div>
 
-            <!-- Moving Averages & Bollinger %B Display -->
+            <!-- Bollinger %B and SMA 20 -->
+            <div class="grid-2 form-group">
+                <div>
+                    <label for="bbPercentB">Bollinger Band %B (0.0 to 1.0)</label>
+                    <input type="number" id="bbPercentB" value="0.50" step="any">
+                </div>
+                <div>
+                    <label for="sma20">SMA 20 (Middle Band)</label>
+                    <input type="number" id="sma20" value="65000" step="any">
+                </div>
+            </div>
+
+            <!-- Moving Averages -->
             <div class="grid-2 form-group">
                 <div>
                     <label for="ma5">MA 5 Value</label>
@@ -376,17 +388,6 @@
                 <div>
                     <label for="ma10">MA 10 Value</label>
                     <input type="number" id="ma10" value="64950" step="any">
-                </div>
-            </div>
-
-            <div class="grid-2 form-group">
-                <div>
-                    <label for="bbPercentB">Bollinger Band %B (Scalp)</label>
-                    <input type="number" id="bbPercentB" value="0.50" step="any" readonly>
-                </div>
-                <div>
-                    <label for="sma20">SMA 20 (Intraday)</label>
-                    <input type="number" id="sma20" value="65000" step="any" readonly>
                 </div>
             </div>
 
@@ -415,7 +416,7 @@
             </div>
         </div>
 
-        <button class="btn-calc" onclick="runCalculationEngine()">⚡ RUN STRATEGY EVALUATION</button>
+        <button class="btn-calc" onclick="runCalculationEngine()">⚡ EVALUATE DUAL-TURNOVER STRATEGY</button>
 
         <!-- Results Output -->
         <div id="resultsWrapper" style="display:none;">
@@ -434,14 +435,16 @@
                 </div>
             </div>
 
+            <!-- Box 1: Small Turnover Scalping Option -->
             <div id="box1" class="result-card state-green">
-                <div class="res-header">Macro Strategy Mode</div>
+                <div class="res-header">Option A: Small Turnover Scalp (1m / 5m BB Band Mode)</div>
                 <div class="res-title" id="box1Title">--</div>
                 <div class="res-message" id="box1Message">--</div>
             </div>
 
+            <!-- Box 2: Larger Turnover Intraday/Macro Option -->
             <div id="box2" class="result-card state-green">
-                <div class="res-header">Immediate Action Signal</div>
+                <div class="res-header">Option B: Larger Turnover Intraday / Macro Swing Mode</div>
                 <div class="res-title" id="box2Title">--</div>
                 <div class="res-message" id="box2Message">--</div>
             </div>
@@ -453,7 +456,7 @@
         </div>
 
         <footer>
-            Standalone HTML5 App • Real-time Data Sync
+            Standalone HTML5 App • Multi-Timeframe Bollinger Matrix
         </footer>
     </div>
 
@@ -461,7 +464,6 @@
         let liveVolatilityData = { dailyRangePct: 1.2, isVolatile: false, category: "Standby / Range-Bound" };
         let multiTimeframeConsensus = { score: 1, state: "Neutral" };
 
-        // --- TECHNICAL ANALYSIS ENGINE ---
         function calculateRSI(closes, period) {
             if (closes.length < period + 1) return 50;
             let gains = 0, losses = 0;
@@ -522,16 +524,16 @@
             let upper = middle + (multiplier * stdev);
             let lower = middle - (multiplier * stdev);
             let currentPrice = closes[closes.length - 1];
-            let percentB = (upper - lower) !== height = (currentPrice - lower) / (upper - lower);
+            let denominator = (upper - lower);
+            let percentB = denominator === 0 ? 0.5 : (currentPrice - lower) / denominator;
             return {
                 upper: parseFloat(upper.toFixed(2)),
                 middle: parseFloat(middle.toFixed(2)),
                 lower: parseFloat(lower.toFixed(2)),
-                percentB: parseFloat(((currentPrice - lower) / (upper - lower || 1)).toFixed(2))
+                percentB: parseFloat(percentB.toFixed(2))
             };
         }
 
-        // --- LIVE SYNC & MULTI-TIMEFRAME CONSENSUS ---
         async function syncAllTechnicalsForTimeframe() {
             const tf = document.getElementById('timeframe').value;
             const badge = document.getElementById('syncBadge');
@@ -654,7 +656,7 @@
             list.prepend(item);
         }
 
-        // --- YOUR EXACT CALCULATION ENGINE SNIPPET & CONFLUENCE CHECKS ---
+        // --- CALCULATION ENGINE WITH BOLLINGER BANDS & DUAL TURNOVER OPTIONS ---
         async function runCalculationEngine() {
             await evaluateMultiTimeframeConsensus();
 
@@ -669,7 +671,6 @@
 
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const pinkB = parseFloat(document.getElementById('pinkB').value) || 1;
-            const yellowC = parseFloat(document.getElementById('yellowC').value) || 1;
             const trendRatio = priceA / pinkB;
 
             const rsi6 = parseFloat(document.getElementById('rsi6').value) || 50;
@@ -678,6 +679,7 @@
 
             const ma5 = parseFloat(document.getElementById('ma5').value) || priceA;
             const ma10 = parseFloat(document.getElementById('ma10').value) || priceA;
+            const bbPercentB = parseFloat(document.getElementById('bbPercentB').value) || 0.5;
 
             const macdVal = parseFloat(document.getElementById('macdValue').value) || 0;
             const macdSig = parseFloat(document.getElementById('macdSignal').value) || 0;
@@ -691,53 +693,40 @@
             document.getElementById('valMarketState').innerText = isVol ? 'High Vol' : 'Standby';
             document.getElementById('valTargetPrice').innerText = '$' + profitTarget.toLocaleString('en-US', {maximumFractionDigits: 2});
 
-            const box1 = document.getElementById('box1');
-            const box1Title = document.getElementById('box1Title');
-            const box1Message = document.getElementById('box1Message');
-
-            let isShortTf = (tf === '1m' || tf === '5m' || tf === '15m');
-            let macroGatePassed = true;
-            let macroMsg = "";
-
-            if (bypassEtf) {
-                macroMsg = " [ETF Bypassed - Pure Technical Mode]";
-            } else {
-                if (etfFlow === "Deep Red") {
-                    if (isShortTf) {
-                        posSize = posSize * 0.5;
-                        macroMsg = " [Short TF Deep Red: Size scaled down 50%]";
-                    } else {
-                        macroGatePassed = false;
-                        macroMsg = " [Long TF Deep Red: Gate Closed]";
-                    }
-                } else if (etfFlow === "Mixed/Flat/Red" && !isShortTf) {
-                    posSize = posSize * 0.5;
-                    macroMsg = " [Long TF Mixed Flow: Range Cap Active]";
-                }
-            }
-
-            const isGreenMacro = bypassEtf || ((fedWatch >= 75) && (etfFlow === "Solid Green" || (isShortTf && etfFlow !== "Deep Red")));
-
-            if (!macroGatePassed) {
-                box1.className = 'result-card state-red';
-                box1Title.innerText = '🔴 MACRO GATE CLOSED (DEEP RED ETF)';
-                box1Message.innerText = `High timeframe institutional outflows block trading.${macroMsg}`;
-            } else if (isGreenMacro) {
-                box1.className = 'result-card state-green';
-                box1Title.innerText = `🟢 MACRO TIDE: BULLISH ACCUMULATION${macroMsg}`;
-                box1Message.innerText = `Multi-TF Consensus Score: ${multiTimeframeConsensus.score}/6. Adjusted Position: $${posSize.toFixed(2)}.`;
-            } else {
-                box1.className = 'result-card state-yellow';
-                box1Title.innerText = `🟡 MACRO TIDE: RANGE CONSOLIDATION${macroMsg}`;
-                box1Message.innerText = `Market sideways. Multi-TF Score: ${multiTimeframeConsensus.score}/6. Await support test.`;
-            }
-
-            // Technical Confluence Checks across all setups
+            // --- TECHNICAL CONFLUENCE ---
             const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
             const isMaBullish = (priceA >= ma5) && (ma5 >= ma10);
             const isMacdBullish = (macdVal >= macdSig);
             const isTechnicalBullish = isRsiBullish && isMaBullish && isMacdBullish;
 
+            // --- OPTION A: SMALL TURNOVER SCALPING (1m / 5m BB Band Extreme Logic) ---
+            const isScalpOversold = (bbPercentB <= 0.15); // Touching/below lower band
+            const isScalpOverbought = (bbPercentB >= 0.85); // Touching/above upper band
+            const isScalpTrigger = isScalpOversold || (candleSetup.includes("Green Reversal") && bbPercentB <= 0.35);
+
+            const box1 = document.getElementById('box1');
+            const box1Title = document.getElementById('box1Title');
+            const box1Message = document.getElementById('box1Message');
+
+            let scalpSignal = "";
+            if (isScalpTrigger) {
+                box1.className = 'result-card state-green';
+                box1Title.innerText = `🟢 SCALP BUY: LOWER BAND BOUNCE (%B: ${bbPercentB.toFixed(2)})`;
+                box1Message.innerText = `Bollinger %B indicates oversold condition on ${tf}. Quick micro-scalp opportunity for 0.1% to 0.4% turnover. Position: $${posSize.toFixed(2)}.`;
+                scalpSignal = "SCALP BUY";
+            } else if (isScalpOverbought) {
+                box1.className = 'result-card state-yellow';
+                box1Title.innerText = `🟡 SCALP TAKE PROFIT: UPPER BAND (%B: ${bbPercentB.toFixed(2)})`;
+                box1Message.innerText = `Price is riding upper Bollinger band. Lock in micro profits or tighten trailing stop.`;
+                scalpSignal = "SCALP EXIT";
+            } else {
+                box1.className = 'result-card state-yellow';
+                box1Title.innerText = `⏳ SCALP STANDBY (MID-BAND %B: ${bbPercentB.toFixed(2)})`;
+                box1Message.innerText = `Bollinger %B is neutral. Wait for bands to pinch or price to touch outer extremes (<= 0.15 or >= 0.85).`;
+                scalpSignal = "SCALP WAIT";
+            }
+
+            // --- OPTION B: LARGER TURNOVER INTRADAY / MACRO SWING MODE ---
             const isBuyTrigger = (
                 (candleSetup === "Green Reversal (Above Support)" && trendRatio >= 1.000 && trendRatio <= 1.003) ||
                 (candleSetup === "Green Breakdown Bounce (Below Support Reclaiming)" && isTechnicalBullish) ||
@@ -748,32 +737,26 @@
             const box2Title = document.getElementById('box2Title');
             const box2Message = document.getElementById('box2Message');
 
-            let actionSignal = "";
-
-            if (!macroGatePassed) {
-                box2.className = 'result-card state-red';
-                box2Title.innerText = '❌ STAND DOWN (MACRO GATE CLOSED)';
-                box2Message.innerText = 'Preserve capital on sidelines due to macro institutional restriction.';
-                actionSignal = "STAND DOWN";
-            } else if (isBuyTrigger && (isGreenMacro || bypassEtf)) {
+            let macroSignal = "";
+            if (isBuyTrigger && (etfFlow === "Solid Green" || bypassEtf)) {
                 box2.className = 'result-card state-green';
-                if (isVol) {
-                    box2Title.innerText = 'HIGH VOLATILITY: Trade and hold for 2% – 3%+ swing target';
-                    box2Message.innerText = `Volatility detected (${liveVolatilityData.dailyRangePct.toFixed(1)}% range). Multi-TF consensus aligned. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
-                } else {
-                    box2Title.innerText = 'NORMAL MOMENTUM: Trade for 0.5% – 1% target';
-                    box2Message.innerText = `Stable momentum environment. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
-                }
-                actionSignal = "BUY ORDER";
+                box2Title.innerText = '🚀 SWING ENTRY: MULTI-TF TREND CONTINUATION';
+                box2Message.innerText = `Multi-TF Consensus Score: ${multiTimeframeConsensus.score}/6. Strong trend alignment for larger daily turnover. Target: $${profitTarget.toFixed(2)}.`;
+                macroSignal = "SWING BUY";
+            } else if (etfFlow === "Deep Red" && !bypassEtf) {
+                box2.className = 'result-card state-red';
+                box2Title.innerText = '🛑 SWING GATE CLOSED (DEEP RED ETF FLOWS)';
+                box2Message.innerText = 'Institutional outflows restrict swing positions. Stay in cash or trade small scalps only.';
+                macroSignal = "SWING STAND DOWN";
             } else {
                 box2.className = 'result-card state-yellow';
-                box2Title.innerText = 'STANDBY MARKET: Micro scalp for 0.1% – 0.3% win (Tight Range)';
-                box2Message.innerText = `Current market condition: ${liveVolatilityData.category}. Restrict exposure to micro scalps or stay flat.`;
-                actionSignal = "MICRO SCALP / FLAT";
+                box2Title.innerText = '⚖️ SWING CONSOLIDATION RANGE';
+                box2Message.innerText = `Multi-TF Score: ${multiTimeframeConsensus.score}/6. Market is testing support/resistance ranges. Await confirmation.`;
+                macroSignal = "SWING HOLD";
             }
 
             document.getElementById('resultsWrapper').style.display = 'block';
-            logExecution(actionSignal);
+            logExecution(`Scalp: ${scalpSignal} | Swing: ${macroSignal}`);
         }
 
         window.onload = function() {
