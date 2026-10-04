@@ -541,15 +541,7 @@
         // -------------------------------------------------------------
         // MULTI-TIMEFRAME SIMULTANEOUS CHECK & VOLATILITY DETECTOR
         // -------------------------------------------------------------
-let multiTimeframeConsensus = {
-            score: 0,
-            state: "",
-            tiers: {
-                scalp: { advice: "Awaiting data..." },
-                mid: { advice: "Awaiting data..." },
-                macro: { advice: "Awaiting data..." }
-            }
-        };
+
         async function syncAllTechnicalsForTimeframe() {
             const tf = document.getElementById('timeframe').value;
             const badge = document.getElementById('syncBadge');
@@ -608,46 +600,19 @@ async function evaluateMultiTimeframeConsensus() {
                 
                 const results = await Promise.all(requests);
                 let score = 0;
-                let tfResults = {};
                 
-                timeframes.forEach((tf, index) => {
-                    const data = results[index];
+                results.forEach((data) => {
                     if (Array.isArray(data) && data.length > 10) {
                         const closes = data.map(c => parseFloat(c[4]));
                         const rsi = calculateRSI(closes, 6);
-                        const isBullish = rsi > 50;
-                        if (isBullish) score += 1;
-                        tfResults[tf] = { rsi, isBullish };
+                        if (rsi > 50) {
+                            score += 1;
+                        }
                     }
                 });
 
                 multiTimeframeConsensus.score = score;
                 multiTimeframeConsensus.state = score >= 4 ? "Bullish Alignment" : (score <= 2 ? "Bearish / Range" : "Mixed Consensus");
-
-                // Tier 1: Scalp Scenario (1m & 5m)
-                const scalpBullish = (tfResults['1m']?.isBullish && tfResults['5m']?.isBullish);
-                multiTimeframeConsensus.tiers.scalp = {
-                    advice: scalpBullish 
-                        ? "🟢 Scalp Tier (1m/5m): Favorable to enter for low-profit micro scalp (0.1% - 0.3%)." 
-                        : "🔴 Scalp Tier (1m/5m): Choppy conditions — do not enter short scalps."
-                };
-
-                // Tier 2: Mid Scenario (15m & 1h)
-                const midBullish = (tfResults['15m']?.isBullish && tfResults['1h']?.isBullish);
-                multiTimeframeConsensus.tiers.mid = {
-                    advice: midBullish 
-                        ? "🟢 Mid Tier (15m/1h): Favorable to enter for standard profit target (0.5% - 1.0%)." 
-                        : "🟡 Mid Tier (15m/1h): Range-bound momentum — wait for support test."
-                };
-
-                // Tier 3: Macro / Swing Scenario (4h & 1d)
-                const macroBullish = (tfResults['4h']?.isBullish && tfResults['1d']?.isBullish);
-                multiTimeframeConsensus.tiers.macro = {
-                    advice: macroBullish 
-                        ? "🟢 Swing Tier (4h/1d): Favorable to hold for larger profit (2% - 3%+ swing target)." 
-                        : "🔴 Swing Tier (4h/1d): Higher timeframe weak — do not hold for large swings."
-                };
-
             } catch (err) {
                 console.log("Multi-TF Consensus Error:", err);
             }
@@ -749,7 +714,6 @@ async function runCalculationEngine() {
             const etfFlow = document.getElementById('etfFlow').value;
             const bypassEtf = document.getElementById('bypassEtfToggle').checked;
             const tf = document.getElementById('timeframe').value;
-            const tfDisplay = tf.toUpperCase();
 
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const pinkB = parseFloat(document.getElementById('pinkB').value) || 1;
@@ -767,6 +731,7 @@ async function runCalculationEngine() {
             const candleSetup = document.getElementById('candleSetup').value;
 
             const trendRatio = priceA / pinkB;
+            const ceilingRatio = priceA / yellowC;
             
             // Volatility & Precision Target Calculation
             const isVol = liveVolatilityData.isVolatile;
@@ -807,17 +772,29 @@ async function runCalculationEngine() {
 
             if (!macroGatePassed) {
                 box1.className = 'result-card state-red';
-                box1Title.innerText = `🔴 MACRO GATE CLOSED (${tfDisplay})`;
+                box1Title.innerText = '🔴 MACRO GATE CLOSED (DEEP RED ETF)';
                 box1Message.innerText = `High timeframe institutional outflows block trading.${macroMsg}`;
             } else if (isGreenMacro) {
                 box1.className = 'result-card state-green';
-                box1Title.innerText = `🟢 MACRO TIDE: BULLISH ACCUMULATION (${tfDisplay})`;
-                box1Message.innerText = `Multi-TF Score: ${multiTimeframeConsensus.score}/6. Adjusted Position: $${posSize.toFixed(2)}.${macroMsg}`;
+                box1Title.innerText = `🟢 MACRO TIDE: BULLISH ACCUMULATION${macroMsg}`;
+                box1Message.innerText = `Multi-TF Consensus Score: ${multiTimeframeConsensus.score}/6. Adjusted Position: $${posSize.toFixed(2)}.`;
             } else {
                 box1.className = 'result-card state-yellow';
-                box1Title.innerText = `🟡 MACRO TIDE: RANGE CONSOLIDATION (${tfDisplay})`;
-                box1Message.innerText = `Market sideways. Multi-TF Score: ${multiTimeframeConsensus.score}/6.${macroMsg}`;
+                box1Title.innerText = `🟡 MACRO TIDE: RANGE CONSOLIDATION${macroMsg}`;
+                box1Message.innerText = `Market sideways. Multi-TF Score: ${multiTimeframeConsensus.score}/6. Await support test.`;
             }
+
+            // Technical Confluence Checks across all setups
+            const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
+            const isMaBullish = (priceA >= ma5) && (ma5 >= ma10);
+            const isMacdBullish = (macdVal >= macdSig);
+            const isTechnicalBullish = isRsiBullish && isMaBullish && isMacdBullish;
+
+            const isBuyTrigger = (
+                (candleSetup === "Green Reversal (Above Support)" && trendRatio >= 1.000 && trendRatio <= 1.003) ||
+                (candleSetup === "Green Breakdown Bounce (Below Support Reclaiming)" && isTechnicalBullish) ||
+                (candleSetup === "Red Pullback in Uptrend (Above Support)" && isMaBullish)
+            ) && isTechnicalBullish;
 
             const box2 = document.getElementById('box2');
             const box2Title = document.getElementById('box2Title');
@@ -827,22 +804,28 @@ async function runCalculationEngine() {
 
             if (!macroGatePassed) {
                 box2.className = 'result-card state-red';
-                box2Title.innerText = `❌ DO NOT ENTER (MACRO GATE CLOSED)`;
-                box2Message.innerText = `Preserve capital on sidelines. Macro institutional restrictions active.\n\n• ${multiTimeframeConsensus.tiers.scalp.advice}\n• ${multiTimeframeConsensus.tiers.macro.advice}`;
+                box2Title.innerText = '❌ STAND DOWN (MACRO GATE CLOSED)';
+                box2Message.innerText = 'Preserve capital on sidelines due to macro institutional restriction.';
                 actionSignal = "STAND DOWN";
-            } else {
+            } else if (isBuyTrigger && (isGreenMacro || bypassEtf)) {
                 box2.className = 'result-card state-green';
-                box2Title.innerText = `📊 MULTI-SCENARIO TIMEFRAME BREAKDOWN (${tfDisplay})`;
-                box2Message.innerText = `Simultaneous analysis across all timeframe tiers:\n\n` +
-                                        `1️⃣ ${multiTimeframeConsensus.tiers.scalp.advice}\n` +
-                                        `2️⃣ ${multiTimeframeConsensus.tiers.mid.advice}\n` +
-                                        `3️⃣ ${multiTimeframeConsensus.tiers.macro.advice}\n\n` +
-                                        `💰 Position Size: $${posSize.toFixed(2)} | Target: $${profitTarget.toFixed(2)}`;
-                actionSignal = "MULTI-SCENARIO EVALUATED";
+                if (isVol) {
+                    box2Title.innerText = 'HIGH VOLATILITY: Trade and hold for 2% – 3%+ swing target';
+                    box2Message.innerText = `Volatility detected (${liveVolatilityData.dailyRangePct.toFixed(1)}% range). Multi-TF consensus aligned. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
+                } else {
+                    box2Title.innerText = 'NORMAL MOMENTUM: Trade for 0.5% – 1% target';
+                    box2Message.innerText = `Stable momentum environment. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
+                }
+                actionSignal = "BUY ORDER";
+            } else {
+                box2.className = 'result-card state-yellow';
+                box2Title.innerText = 'STANDBY MARKET: Micro scalp for 0.1% – 0.3% win (Tight Range)';
+                box2Message.innerText = `Current market condition: ${liveVolatilityData.category}. Restrict exposure to micro scalps or stay flat.`;
+                actionSignal = "MICRO SCALP / FLAT";
             }
 
             document.getElementById('resultsWrapper').style.display = 'block';
-            logExecution(`${tfDisplay} - ${actionSignal}`);
+            logExecution(actionSignal);
         }
         window.onload = function() {
             loadParams();
