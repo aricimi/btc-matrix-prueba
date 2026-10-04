@@ -192,15 +192,6 @@
             font-weight: 600;
         }
 
-        .chart-container {
-            width: 100%;
-            height: 380px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            margin-bottom: 14px;
-        }
-
         .btn-calc {
             width: 100%;
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -320,25 +311,21 @@
             </div>
         </div>
 
-        <!-- Technical Structure + Interactive TradingView Chart -->
+        <!-- Technical Structure (REVISED SECTION 3) -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">3. Chart Technical Structure</div>
                 <button class="btn-sync" onclick="autoSetLevels()">🎯 Auto Levels</button>
             </div>
-
-            <!-- TradingView Embedded Widget Container -->
-            <div class="chart-container" id="tv_chart_container"></div>
-
             <div class="form-group">
                 <label for="timeframe">Execution Timeframe</label>
-                <select id="timeframe" onchange="updateTimeframeAndLevels()">
-                    <option value="1">1 Minute (Scalp)</option>
-                    <option value="5" selected>5 Minutes (Intraday)</option>
-                    <option value="15">15 Minutes (Intraday)</option>
-                    <option value="60">1 Hour (Swing)</option>
-                    <option value="240">4 Hours (Swing)</option>
-                    <option value="D">1 Day (Macro)</option>
+                <select id="timeframe" onchange="autoSetLevels()">
+                    <option value="1m">1 Minute (Scalp)</option>
+                    <option value="5m" selected>5 Minutes (Intraday)</option>
+                    <option value="15m">15 Minutes (Intraday)</option>
+                    <option value="1h">1 Hour (Swing)</option>
+                    <option value="4h">4 Hours (Swing)</option>
+                    <option value="1d">1 Day (Macro)</option>
                 </select>
             </div>
             <div class="form-group">
@@ -406,36 +393,7 @@
         </footer>
     </div>
 
-    <!-- TradingView Widget Script -->
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        let tvWidget = null;
-
-        // Load TradingView Interactive Chart Widget
-        function initTradingViewChart(interval = "5") {
-            document.getElementById('tv_chart_container').innerHTML = '';
-            tvWidget = new TradingView.widget({
-                "autosize": true,
-                "symbol": "BINANCE:BTCUSDT",
-                "interval": interval,
-                "timezone": "Etc/UTC",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "toolbar_bg": "#0a0f1d",
-                "enable_publishing": false,
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
-                "container_id": "tv_chart_container"
-            });
-        }
-
-        function updateTimeframeAndLevels() {
-            const tf = document.getElementById('timeframe').value;
-            initTradingViewChart(tf);
-            autoSetLevels();
-        }
-
         // Auto-calculate typical Support/Resistance buffers based on Execution Timeframe
         function autoSetLevels() {
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
@@ -443,15 +401,16 @@
 
             if (priceA <= 0) return;
 
-            let supportPct = 0.002;
-            let resistancePct = 0.01;
+            // Varied support/resistance offset based on timeframe volatility
+            let supportPct = 0.002;   // 0.2%
+            let resistancePct = 0.01;  // 1.0%
 
-            if (tf === '1') { supportPct = 0.001; resistancePct = 0.005; }
-            else if (tf === '5') { supportPct = 0.002; resistancePct = 0.01; }
-            else if (tf === '15') { supportPct = 0.0035; resistancePct = 0.015; }
-            else if (tf === '60') { supportPct = 0.008; resistancePct = 0.025; }
-            else if (tf === '240') { supportPct = 0.015; resistancePct = 0.04; }
-            else if (tf === 'D') { supportPct = 0.03; resistancePct = 0.08; }
+            if (tf === '1m') { supportPct = 0.001; resistancePct = 0.005; }
+            else if (tf === '5m') { supportPct = 0.002; resistancePct = 0.01; }
+            else if (tf === '15m') { supportPct = 0.0035; resistancePct = 0.015; }
+            else if (tf === '1h') { supportPct = 0.008; resistancePct = 0.025; }
+            else if (tf === '4h') { supportPct = 0.015; resistancePct = 0.04; }
+            else if (tf === '1d') { supportPct = 0.03; resistancePct = 0.08; }
 
             document.getElementById('pinkB').value = (priceA * (1 - supportPct)).toFixed(2);
             document.getElementById('yellowC').value = (priceA * (1 + resistancePct)).toFixed(2);
@@ -574,7 +533,6 @@
         window.onload = function() {
             loadParams();
             fetchLiveAPIs();
-            initTradingViewChart("5");
             runCalculationEngine();
         };
     </script>
