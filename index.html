@@ -591,29 +591,25 @@
         }
 
         async function evaluateMultiTimeframeConsensus() {
+            const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d'];
             try {
-                const [res5m, res1h, res1d] = await Promise.all([
-                    fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=50'),
-                    fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=50'),
-                    fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=50')
-                ]);
-
-                const data5m = await res5m.json();
-                const data1h = await res1h.json();
-                const data1d = await res1d.json();
-
-                const closes5m = data5m.map(c => parseFloat(c[4]));
-                const closes1h = data1h.map(c => parseFloat(c[4]));
-                const closes1d = data1d.map(c => parseFloat(c[4]));
-
-                const rsi5m = calculateRSI(closes5m, 6);
-                const rsi1h = calculateRSI(closes1h, 12);
-                const rsi1d = calculateRSI(closes1d, 14);
-
+                const requests = timeframes.map(tf => 
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=50`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(requests);
                 let score = 0;
-                if (rsi5m > 50) score += 1;
-                if (rsi1h > 50) score += 2;
-                if (rsi1d > 50) score += 3;
+                
+                results.forEach((data) => {
+                    if (Array.isArray(data) && data.length > 10) {
+                        const closes = data.map(c => parseFloat(c[4]));
+                        const rsi = calculateRSI(closes, 6);
+                        if (rsi > 50) {
+                            score += 1;
+                        }
+                    }
+                });
 
                 multiTimeframeConsensus.score = score;
                 multiTimeframeConsensus.state = score >= 4 ? "Bullish Alignment" : (score <= 2 ? "Bearish / Range" : "Mixed Consensus");
@@ -621,7 +617,6 @@
                 console.log("Multi-TF Consensus Error:", err);
             }
         }
-
         function onTimeframeChange() {
             syncAllTechnicalsForTimeframe();
         }
@@ -707,7 +702,10 @@
         // STRATEGY EVALUATION ENGINE WITH PRECISION OUTPUT MESSAGES
         // -------------------------------------------------------------
 
-        function runCalculationEngine() {
+async function runCalculationEngine() {
+            // Force the code to fetch and check all 6 timeframes FIRST before making any decision
+            await evaluateMultiTimeframeConsensus();
+
             const capital = parseFloat(document.getElementById('totalCapital').value) || 1000;
             const riskPct = parseFloat(document.getElementById('riskPct').value) || 25;
             let posSize = capital * (riskPct / 100);
@@ -786,7 +784,7 @@
                 box1Message.innerText = `Market sideways. Multi-TF Score: ${multiTimeframeConsensus.score}/6. Await support test.`;
             }
 
-            // Technical Confluence Checks across all 6 setups
+            // Technical Confluence Checks across all setups
             const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
             const isMaBullish = (priceA >= ma5) && (ma5 >= ma10);
             const isMacdBullish = (macdVal >= macdSig);
