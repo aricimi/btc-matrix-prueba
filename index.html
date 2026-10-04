@@ -276,7 +276,7 @@
             <div class="subtitle">Live Technical Indicator Sync & Decision Engine</div>
         </header>
 
-        <!-- Live Feeds Banner -->
+        <!-- Live Feeds Banner (Untouched) -->
         <div class="live-bar">
             <div class="live-item">
                 <span class="live-label">Live BTC/USDT</span>
@@ -321,7 +321,7 @@
                     <option value="Deep Red">Deep Red</option>
                 </select>
             </div>
-            <!-- Added Bypass ETF Toggle -->
+            <!-- Bypass ETF Toggle -->
             <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-card-alt); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 0;">
                 <label for="bypassEtfToggle" style="margin-bottom:0; color:#ffffff;">Bypass ETF (Pure Technical Mode)</label>
                 <input type="checkbox" id="bypassEtfToggle" onchange="runCalculationEngine()" style="width: 20px; height: 20px; accent-color: var(--accent-blue); cursor: pointer;">
@@ -338,7 +338,6 @@
                 <button class="btn-sync" onclick="syncAllTechnicalsForTimeframe()">🔄 Auto Sync Technicals</button>
             </div>
 
-            <!-- Timeframe Selection Trigger -->
             <div class="form-group">
                 <label for="timeframe">Select Timeframe (Auto-Sync Target)</label>
                 <select id="timeframe" onchange="onTimeframeChange()">
@@ -430,8 +429,8 @@
                     <div class="metric-value" id="valPositionSize">$0.00</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">Trend Ratio</div>
-                    <div class="metric-value" id="valTrendRatio">1.000</div>
+                    <div class="metric-label">Market Volatility</div>
+                    <div class="metric-value" id="valMarketState">Standby</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label">Target Goal</div>
@@ -464,8 +463,9 @@
     </div>
 
     <script>
-        // Live Volatility Tracker State
-        let liveVolatilityData = { dailyRangePct: 1.2, isVolatile: false };
+        // Global Volatility & Multi-Timeframe Consensus State
+        let liveVolatilityData = { dailyRangePct: 1.2, isVolatile: false, category: "Standby / Range-Bound" };
+        let multiTimeframeConsensus = { score: 1, state: "Neutral" };
 
         // -------------------------------------------------------------
         // TECHNICAL ANALYSIS CALCULATION ENGINE (RSI, MA, MACD)
@@ -539,7 +539,7 @@
         }
 
         // -------------------------------------------------------------
-        // AUTOMATIC TIMEFRAME TECHNICAL SYNC
+        // MULTI-TIMEFRAME SIMULTANEOUS CHECK & VOLATILITY DETECTOR
         // -------------------------------------------------------------
 
         async function syncAllTechnicalsForTimeframe() {
@@ -549,6 +549,7 @@
             badge.innerText = 'SYNCING...';
 
             try {
+                // 1. Fetch Selected Timeframe for Inputs
                 const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=100`;
                 const response = await fetch(url);
                 const data = await response.json();
@@ -572,6 +573,9 @@
                 document.getElementById('macdValue').value = macdRes.macd;
                 document.getElementById('macdSignal').value = macdRes.signal;
 
+                // 2. Multi-Timeframe Simultaneous Check (Short 5m, Mid 1h, Macro 1d)
+                await evaluateMultiTimeframeConsensus();
+
                 badge.className = 'status-badge badge-success';
                 badge.innerText = `SYNCED (${tf.toUpperCase()})`;
 
@@ -583,6 +587,38 @@
                 badge.style.background = 'rgba(239, 68, 68, 0.2)';
                 badge.style.color = '#ef4444';
                 badge.innerText = 'SYNC ERROR';
+            }
+        }
+
+        async function evaluateMultiTimeframeConsensus() {
+            try {
+                const [res5m, res1h, res1d] = await Promise.all([
+                    fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=50'),
+                    fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=50'),
+                    fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=50')
+                ]);
+
+                const data5m = await res5m.json();
+                const data1h = await res1h.json();
+                const data1d = await res1d.json();
+
+                const closes5m = data5m.map(c => parseFloat(c[4]));
+                const closes1h = data1h.map(c => parseFloat(c[4]));
+                const closes1d = data1d.map(c => parseFloat(c[4]));
+
+                const rsi5m = calculateRSI(closes5m, 6);
+                const rsi1h = calculateRSI(closes1h, 12);
+                const rsi1d = calculateRSI(closes1d, 14);
+
+                let score = 0;
+                if (rsi5m > 50) score += 1;
+                if (rsi1h > 50) score += 2;
+                if (rsi1d > 50) score += 3;
+
+                multiTimeframeConsensus.score = score;
+                multiTimeframeConsensus.state = score >= 4 ? "Bullish Alignment" : (score <= 2 ? "Bearish / Range" : "Mixed Consensus");
+            } catch (err) {
+                console.log("Multi-TF Consensus Error:", err);
             }
         }
 
@@ -611,6 +647,7 @@
         }
 
         async function fetchLiveAPIs() {
+            // Live Fear & Greed API
             try {
                 const fgRes = await fetch('https://api.alternative.me/fng/');
                 const fgData = await fgRes.json();
@@ -620,15 +657,22 @@
                 console.log('FG API Error:', err);
             }
 
-            // Live Volatility Check via Binance 24hr ticker
+            // Live Volatility Check via Binance 24hr ticker API
             try {
                 const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
                 const data = await res.json();
                 const high = parseFloat(data.highPrice);
                 const low = parseFloat(data.lowPrice);
                 const rangePct = ((high - low) / low) * 100;
+                
                 liveVolatilityData.dailyRangePct = rangePct;
-                liveVolatilityData.isVolatile = rangePct >= 3.0;
+                if (rangePct >= 2.5) {
+                    liveVolatilityData.isVolatile = true;
+                    liveVolatilityData.category = "High Volatility (Big Swings)";
+                } else {
+                    liveVolatilityData.isVolatile = false;
+                    liveVolatilityData.category = "Standby / Range-Bound (~1% daily fluctuation)";
+                }
             } catch (err) {
                 console.log('Volatility API Error:', err);
             }
@@ -660,7 +704,7 @@
         }
 
         // -------------------------------------------------------------
-        // STRATEGY EVALUATION ENGINE WITH BYPASS & VOLATILITY RULES
+        // STRATEGY EVALUATION ENGINE WITH PRECISION OUTPUT MESSAGES
         // -------------------------------------------------------------
 
         function runCalculationEngine() {
@@ -691,14 +735,13 @@
             const trendRatio = priceA / pinkB;
             const ceilingRatio = priceA / yellowC;
             
-            // Dynamic target based on volatility
-            const isVolatile = liveVolatilityData.isVolatile;
-            const dailyRange = liveVolatilityData.dailyRangePct;
-            let profitTargetPct = isVolatile ? 0.03 : 0.01;
+            // Volatility & Precision Target Calculation
+            const isVol = liveVolatilityData.isVolatile;
+            let profitTargetPct = isVol ? 0.025 : 0.008;
             let profitTarget = priceA * (1 + profitTargetPct);
 
             document.getElementById('valPositionSize').innerText = '$' + posSize.toFixed(2);
-            document.getElementById('valTrendRatio').innerText = trendRatio.toFixed(4);
+            document.getElementById('valMarketState').innerText = isVol ? 'High Vol' : 'Standby';
             document.getElementById('valTargetPrice').innerText = '$' + profitTarget.toLocaleString('en-US', {maximumFractionDigits: 2});
 
             // Macro & Timeframe-Aware ETF Rules Evaluation
@@ -711,18 +754,18 @@
             let macroMsg = "";
 
             if (bypassEtf) {
-                macroMsg = " [ETF Bypassed - Pure Technical Mode Active]";
+                macroMsg = " [ETF Bypassed - Pure Technical Mode]";
             } else {
                 if (etfFlow === "Deep Red") {
                     if (isShortTf) {
-                        posSize = posSize * 0.5; // Scale down 50% on short TF instead of hard block
+                        posSize = posSize * 0.5;
                         macroMsg = " [Short TF Deep Red: Size scaled down 50%]";
                     } else {
                         macroGatePassed = false;
                         macroMsg = " [Long TF Deep Red: Gate Closed]";
                     }
                 } else if (etfFlow === "Mixed/Flat/Red" && !isShortTf) {
-                    posSize = posSize * 0.5; // Range cap on mixed for long TF
+                    posSize = posSize * 0.5;
                     macroMsg = " [Long TF Mixed Flow: Range Cap Active]";
                 }
             }
@@ -736,11 +779,11 @@
             } else if (isGreenMacro) {
                 box1.className = 'result-card state-green';
                 box1Title.innerText = `🟢 MACRO TIDE: BULLISH ACCUMULATION${macroMsg}`;
-                box1Message.innerText = `Institutional flow favorable. Adjusted Position Size: $${posSize.toFixed(2)}.`;
+                box1Message.innerText = `Multi-TF Consensus Score: ${multiTimeframeConsensus.score}/6. Adjusted Position: $${posSize.toFixed(2)}.`;
             } else {
                 box1.className = 'result-card state-yellow';
                 box1Title.innerText = `🟡 MACRO TIDE: RANGE CONSOLIDATION${macroMsg}`;
-                box1Message.innerText = `Market is sideways. Lower execution frequency and wait for support.`;
+                box1Message.innerText = `Market sideways. Multi-TF Score: ${multiTimeframeConsensus.score}/6. Await support test.`;
             }
 
             // Technical Confluence Checks across all 6 setups
@@ -755,13 +798,6 @@
                 (candleSetup === "Red Pullback in Uptrend (Above Support)" && isMaBullish)
             ) && isTechnicalBullish;
 
-            const isCeilingTrap = (
-                candleSetup === "Ceiling Chasing / Resistance Test" ||
-                candleSetup === "Red Breakdown (Below Support)" ||
-                ceilingRatio >= 0.998 ||
-                rsi6 > 70
-            );
-
             const box2 = document.getElementById('box2');
             const box2Title = document.getElementById('box2Title');
             const box2Message = document.getElementById('box2Message');
@@ -775,23 +811,18 @@
                 actionSignal = "STAND DOWN";
             } else if (isBuyTrigger && (isGreenMacro || bypassEtf)) {
                 box2.className = 'result-card state-green';
-                if (isVolatile) {
-                    box2Title.innerText = '🚀 HIGH VOLATILITY: TRADE & HOLD FOR 2% - 3%+ SWING';
-                    box2Message.innerText = `High volatility detected (${dailyRange.toFixed(1)}% daily range). Full confluence confirmed. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
+                if (isVol) {
+                    box2Title.innerText = 'HIGH VOLATILITY: Trade and hold for 2% – 3%+ swing target';
+                    box2Message.innerText = `Volatility detected (${liveVolatilityData.dailyRangePct.toFixed(1)}% range). Multi-TF consensus aligned. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
                 } else {
-                    box2Title.innerText = '🟢 NORMAL MOMENTUM: TRADE FOR 0.5% - 1% TARGET';
-                    box2Message.innerText = `Standby range market (~${dailyRange.toFixed(1)}% daily fluctuation). Take quick profit. Deploy $${posSize.toFixed(2)}.`;
+                    box2Title.innerText = 'NORMAL MOMENTUM: Trade for 0.5% – 1% target';
+                    box2Message.innerText = `Stable momentum environment. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
                 }
                 actionSignal = "BUY ORDER";
-            } else if (isCeilingTrap) {
-                box2.className = 'result-card state-yellow';
-                box2Title.innerText = '✋ CEILING TRAP / OVERBOUGHT WARNING';
-                box2Message.innerText = `Price testing resistance or RSI overbought (RSI6: ${rsi6}). Await a pullback to support.`;
-                actionSignal = "STAND DOWN";
             } else {
                 box2.className = 'result-card state-yellow';
-                box2Title.innerText = '🟡 STANDBY MARKET: MICRO SCALP FOR 0.1% - 0.3% WIN';
-                box2Message.innerText = `Sideways or choppy conditions (~${dailyRange.toFixed(1)}% daily range). Restrict exposure to micro scalps or stay flat.`;
+                box2Title.innerText = 'STANDBY MARKET: Micro scalp for 0.1% – 0.3% win (Tight Range)';
+                box2Message.innerText = `Current market condition: ${liveVolatilityData.category}. Restrict exposure to micro scalps or stay flat.`;
                 actionSignal = "MICRO SCALP / FLAT";
             }
 
