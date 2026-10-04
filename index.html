@@ -127,6 +127,10 @@
             cursor: pointer;
         }
 
+        .btn-sync:active {
+            opacity: 0.7;
+        }
+
         .card {
             background: var(--bg-card);
             border-radius: 16px;
@@ -155,18 +159,24 @@
             margin-bottom: 14px;
         }
 
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
         label {
             display: block;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             margin-bottom: 6px;
             font-weight: 600;
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
         }
 
         input[type="number"], select {
@@ -174,23 +184,25 @@
             background: var(--bg-card-alt);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 10px;
-            padding: 12px 14px;
+            padding: 10px 12px;
             color: #ffffff;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             outline: none;
             -webkit-appearance: none;
             appearance: none;
         }
 
-        .unit-tag {
-            position: absolute;
-            right: 14px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            pointer-events: none;
-            font-weight: 600;
+        .status-badge {
+            font-size: 0.68rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-left: 6px;
+            display: inline-block;
         }
+        .badge-syncing { background: rgba(56, 189, 248, 0.2); color: var(--cyan-glow); }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--green-glow); }
 
         .btn-calc {
             width: 100%;
@@ -261,7 +273,7 @@
     <div class="container">
         <header>
             <div class="app-title">⚡ BITCOIN MATRIX PRO</div>
-            <div class="subtitle">Live API Stream & Risk Management Engine</div>
+            <div class="subtitle">Live Technical Indicator Sync & Decision Engine</div>
         </header>
 
         <!-- Live Feeds Banner -->
@@ -274,7 +286,7 @@
                 <span class="live-label">Fear & Greed</span>
                 <span class="live-val" id="liveFg">--</span>
             </div>
-            <button class="btn-sync" onclick="fetchLiveAPIs()">🔄 Sync</button>
+            <button class="btn-sync" onclick="fetchLiveAPIs()">🔄 Sync Price</button>
         </div>
 
         <!-- Bankroll & Risk Management -->
@@ -311,15 +323,20 @@
             </div>
         </div>
 
-        <!-- Technical Structure (REVISED SECTION 3) -->
+        <!-- Technical Structure & Live Sync Indicators -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">3. Chart Technical Structure</div>
-                <button class="btn-sync" onclick="autoSetLevels()">🎯 Auto Levels</button>
+                <div class="card-title">
+                    3. Technical Indicators
+                    <span id="syncBadge" class="status-badge badge-success">AUTO READY</span>
+                </div>
+                <button class="btn-sync" onclick="syncAllTechnicalsForTimeframe()">🔄 Auto Sync Technicals</button>
             </div>
+
+            <!-- Timeframe Selection Trigger -->
             <div class="form-group">
-                <label for="timeframe">Execution Timeframe</label>
-                <select id="timeframe" onchange="autoSetLevels()">
+                <label for="timeframe">Select Timeframe (Auto-Sync Target)</label>
+                <select id="timeframe" onchange="onTimeframeChange()">
                     <option value="1m">1 Minute (Scalp)</option>
                     <option value="5m" selected>5 Minutes (Intraday)</option>
                     <option value="15m">15 Minutes (Intraday)</option>
@@ -328,18 +345,63 @@
                     <option value="1d">1 Day (Macro)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="priceA">Current Price (A)</label>
-                <input type="number" id="priceA" value="65000" step="any" oninput="autoSetLevels()">
+
+            <!-- Price & Support Levels -->
+            <div class="grid-3 form-group">
+                <div>
+                    <label for="priceA">Price (A)</label>
+                    <input type="number" id="priceA" value="65000" step="any" oninput="autoSetLevels()">
+                </div>
+                <div>
+                    <label for="pinkB">Pink (B)</label>
+                    <input type="number" id="pinkB" value="64850" step="any">
+                </div>
+                <div>
+                    <label for="yellowC">Yellow (C)</label>
+                    <input type="number" id="yellowC" value="66200" step="any">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="pinkB">Pink Line / Support MA (B)</label>
-                <input type="number" id="pinkB" value="64850" step="any">
+
+            <!-- Multi-Period RSI Indicators (6, 12, 24) -->
+            <div class="grid-3 form-group">
+                <div>
+                    <label for="rsi6">RSI 6</label>
+                    <input type="number" id="rsi6" value="50" min="0" max="100">
+                </div>
+                <div>
+                    <label for="rsi12">RSI 12</label>
+                    <input type="number" id="rsi12" value="50" min="0" max="100">
+                </div>
+                <div>
+                    <label for="rsi24">RSI 24</label>
+                    <input type="number" id="rsi24" value="50" min="0" max="100">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="yellowC">Yellow Line / Upper Resistance (C)</label>
-                <input type="number" id="yellowC" value="66200" step="any">
+
+            <!-- Moving Averages (MA5, MA10) -->
+            <div class="grid-2 form-group">
+                <div>
+                    <label for="ma5">MA 5 Value</label>
+                    <input type="number" id="ma5" value="65000" step="any">
+                </div>
+                <div>
+                    <label for="ma10">MA 10 Value</label>
+                    <input type="number" id="ma10" value="64950" step="any">
+                </div>
             </div>
+
+            <!-- MACD Data Output -->
+            <div class="grid-2 form-group">
+                <div>
+                    <label for="macdValue">MACD Line (12,26)</label>
+                    <input type="number" id="macdValue" value="0.00" step="any">
+                </div>
+                <div>
+                    <label for="macdSignal">MACD Signal (9)</label>
+                    <input type="number" id="macdSignal" value="0.00" step="any">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="candleSetup">Candle Setup Pattern</label>
                 <select id="candleSetup">
@@ -394,16 +456,144 @@
     </div>
 
     <script>
-        // Auto-calculate typical Support/Resistance buffers based on Execution Timeframe
+        // -------------------------------------------------------------
+        // TECHNICAL ANALYSIS CALCULATION ENGINE (RSI, MA, MACD)
+        // -------------------------------------------------------------
+        
+        function calculateRSI(closes, period) {
+            if (closes.length < period + 1) return 50;
+            let gains = 0;
+            let losses = 0;
+
+            for (let i = 1; i <= period; i++) {
+                let change = closes[i] - closes[i - 1];
+                if (change >= 0) gains += change;
+                else losses -= change;
+            }
+
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+
+            for (let i = period + 1; i < closes.length; i++) {
+                let change = closes[i] - closes[i - 1];
+                if (change >= 0) {
+                    avgGain = (avgGain * (period - 1) + change) / period;
+                    avgLoss = (avgLoss * (period - 1)) / period;
+                } else {
+                    avgGain = (avgGain * (period - 1)) / period;
+                    avgLoss = (avgLoss * (period - 1) - change) / period;
+                }
+            }
+
+            if (avgLoss === 0) return 100;
+            let rs = avgGain / avgLoss;
+            return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
+        }
+
+        function calculateSMA(closes, period) {
+            if (closes.length < period) return closes[closes.length - 1];
+            let slice = closes.slice(closes.length - period);
+            let sum = slice.reduce((a, b) => a + b, 0);
+            return parseFloat((sum / period).toFixed(2));
+        }
+
+        function calculateEMA(closes, period) {
+            if (closes.length < period) return closes[closes.length - 1];
+            let k = 2 / (period + 1);
+            let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+            for (let i = period; i < closes.length; i++) {
+                ema = (closes[i] * k) + (ema * (1 - k));
+            }
+            return ema;
+        }
+
+        function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
+            if (closes.length < slow + signal) return { macd: 0, signal: 0 };
+            
+            let macdLine = [];
+            for (let i = slow; i <= closes.length; i++) {
+                let subCloses = closes.slice(0, i);
+                let fastEma = calculateEMA(subCloses, fast);
+                let slowEma = calculateEMA(subCloses, slow);
+                macdLine.push(fastEma - slowEma);
+            }
+
+            let currentMacd = macdLine[macdLine.length - 1];
+            let currentSignal = calculateEMA(macdLine, signal);
+
+            return {
+                macd: parseFloat(currentMacd.toFixed(2)),
+                signal: parseFloat(currentSignal.toFixed(2))
+            };
+        }
+
+        // -------------------------------------------------------------
+        // AUTOMATIC TIMEFRAME TECHNICAL SYNC
+        // -------------------------------------------------------------
+
+        async function syncAllTechnicalsForTimeframe() {
+            const tf = document.getElementById('timeframe').value;
+            const badge = document.getElementById('syncBadge');
+            badge.className = 'status-badge badge-syncing';
+            badge.innerText = 'SYNCING...';
+
+            try {
+                // Fetch 100 K-line candles for chosen timeframe from Binance API
+                const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=100`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const closes = data.map(candle => parseFloat(candle[4]));
+                const latestPrice = closes[closes.length - 1];
+
+                // Update Price
+                document.getElementById('liveBtc').innerText = '$' + latestPrice.toLocaleString('en-US', {maximumFractionDigits: 2});
+                document.getElementById('priceA').value = latestPrice.toFixed(2);
+
+                // Auto calculate and update Support & Resistance Levels
+                autoSetLevels();
+
+                // Compute RSI 6, 12, 24
+                document.getElementById('rsi6').value = calculateRSI(closes, 6);
+                document.getElementById('rsi12').value = calculateRSI(closes, 12);
+                document.getElementById('rsi24').value = calculateRSI(closes, 24);
+
+                // Compute MA 5, 10
+                document.getElementById('ma5').value = calculateSMA(closes, 5);
+                document.getElementById('ma10').value = calculateSMA(closes, 10);
+
+                // Compute MACD (12, 26, 9)
+                const macdRes = calculateMACD(closes, 12, 26, 9);
+                document.getElementById('macdValue').value = macdRes.macd;
+                document.getElementById('macdSignal').value = macdRes.signal;
+
+                badge.className = 'status-badge badge-success';
+                badge.innerText = `SYNCED (${tf.toUpperCase()})`;
+
+                // Automatically update results evaluation
+                runCalculationEngine();
+
+            } catch (err) {
+                console.error("Technical Sync Error: ", err);
+                badge.className = 'status-badge';
+                badge.style.background = 'rgba(239, 68, 68, 0.2)';
+                badge.style.color = '#ef4444';
+                badge.innerText = 'SYNC ERROR';
+            }
+        }
+
+        function onTimeframeChange() {
+            syncAllTechnicalsForTimeframe();
+        }
+
         function autoSetLevels() {
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const tf = document.getElementById('timeframe').value;
 
             if (priceA <= 0) return;
 
-            // Varied support/resistance offset based on timeframe volatility
-            let supportPct = 0.002;   // 0.2%
-            let resistancePct = 0.01;  // 1.0%
+            let supportPct = 0.002;
+            let resistancePct = 0.01;
 
             if (tf === '1m') { supportPct = 0.001; resistancePct = 0.005; }
             else if (tf === '5m') { supportPct = 0.002; resistancePct = 0.01; }
@@ -416,24 +606,16 @@
             document.getElementById('yellowC').value = (priceA * (1 + resistancePct)).toFixed(2);
         }
 
-        // Fetch Live APIs: Binance Price & Alternative.me Fear & Greed
         async function fetchLiveAPIs() {
             try {
-                const btcRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-                const btcData = await btcRes.json();
-                const currentPrice = parseFloat(btcData.price);
-                document.getElementById('liveBtc').innerText = '$' + currentPrice.toLocaleString('en-US', {maximumFractionDigits: 2});
-                document.getElementById('priceA').value = currentPrice.toFixed(2);
-
-                autoSetLevels();
-
                 const fgRes = await fetch('https://api.alternative.me/fng/');
                 const fgData = await fgRes.json();
                 const fgScore = fgData.data[0].value;
                 document.getElementById('liveFg').innerText = fgScore + '/100';
             } catch (err) {
-                console.log('API Fetch Error:', err);
+                console.log('FG API Error:', err);
             }
+            syncAllTechnicalsForTimeframe();
         }
 
         function saveParams() {
@@ -459,6 +641,10 @@
             list.prepend(item);
         }
 
+        // -------------------------------------------------------------
+        // STRATEGY EVALUATION ENGINE
+        // -------------------------------------------------------------
+
         function runCalculationEngine() {
             const capital = parseFloat(document.getElementById('totalCapital').value) || 1000;
             const riskPct = parseFloat(document.getElementById('riskPct').value) || 25;
@@ -470,6 +656,17 @@
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const pinkB = parseFloat(document.getElementById('pinkB').value) || 1;
             const yellowC = parseFloat(document.getElementById('yellowC').value) || 1;
+
+            // Indicator Inputs
+            const rsi6 = parseFloat(document.getElementById('rsi6').value) || 50;
+            const rsi12 = parseFloat(document.getElementById('rsi12').value) || 50;
+            const rsi24 = parseFloat(document.getElementById('rsi24').value) || 50;
+
+            const ma5 = parseFloat(document.getElementById('ma5').value) || priceA;
+            const ma10 = parseFloat(document.getElementById('ma10').value) || priceA;
+
+            const macdVal = parseFloat(document.getElementById('macdValue').value) || 0;
+            const macdSig = parseFloat(document.getElementById('macdSignal').value) || 0;
             const candleSetup = document.getElementById('candleSetup').value;
 
             const trendRatio = priceA / pinkB;
@@ -480,6 +677,7 @@
             document.getElementById('valTrendRatio').innerText = trendRatio.toFixed(4);
             document.getElementById('valTargetPrice').innerText = '$' + profitTarget.toLocaleString('en-US', {maximumFractionDigits: 2});
 
+            // Macro Evaluation
             const box1 = document.getElementById('box1');
             const box1Title = document.getElementById('box1Title');
             const box1Message = document.getElementById('box1Message');
@@ -501,28 +699,34 @@
                 box1Message.innerText = `Market is sideways. Lower execution frequency and wait for major support levels.`;
             }
 
+            // Technical Confluence Checks
+            const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
+            const isMaBullish = (priceA >= ma5) && (ma5 >= ma10); // Price above MA5, MA5 above MA10
+            const isMacdBullish = (macdVal >= macdSig); // MACD above Signal line
+
+            const isTechnicalBullish = isRsiBullish && isMaBullish && isMacdBullish;
+            const isBuyTrigger = (candleSetup === "Green Reversal (Above Pink Line)") && (trendRatio >= 1.000 && trendRatio <= 1.003) && isTechnicalBullish;
+            const isCeilingTrap = (candleSetup === "Ceiling Chasing (At Yellow Line)") || (ceilingRatio >= 0.998) || (rsi6 > 70);
+
             const box2 = document.getElementById('box2');
             const box2Title = document.getElementById('box2Title');
             const box2Message = document.getElementById('box2Message');
-
-            const isBuyTrigger = (candleSetup === "Green Reversal (Above Pink Line)") && (trendRatio >= 1.000 && trendRatio <= 1.003);
-            const isCeilingTrap = (candleSetup === "Ceiling Chasing (At Yellow Line)") || (ceilingRatio >= 0.998);
 
             let actionSignal = "";
             if (isBuyTrigger && isGreenMacro) {
                 box2.className = 'result-card state-green';
                 box2Title.innerText = '🟢 TARGET ACTION: EXECUTE BUY ORDER';
-                box2Message.innerText = `Buy signal confirmed. Deploy $${posSize.toFixed(2)}. Set take-profit target at $${profitTarget.toFixed(2)}.`;
+                box2Message.innerText = `Full confluence achieved (RSI 6: ${rsi6}, MA5/MA10 Golden Cross, MACD Bullish). Deploy $${posSize.toFixed(2)}. Target profit: $${profitTarget.toFixed(2)}.`;
                 actionSignal = "BUY ORDER";
             } else if (isCeilingTrap) {
                 box2.className = 'result-card state-yellow';
-                box2Title.innerText = '✋ TARGET ACTION: CEILING TRAP DETECTED';
-                box2Message.innerText = 'Price is hugging resistance. Do not enter here—wait for a pull-back to support.';
+                box2Title.innerText = '✋ TARGET ACTION: CEILING TRAP / OVERBOUGHT';
+                box2Message.innerText = `Price at resistance or RSI overbought (RSI6: ${rsi6}). Await a pullback to support.`;
                 actionSignal = "STAND DOWN";
             } else {
                 box2.className = 'result-card state-red';
                 box2Title.innerText = '❌ TARGET ACTION: NO SETUP / STAY OUT';
-                box2Message.innerText = 'Structure is weak or price is below the support baseline. Keep cash sitting on the sidelines.';
+                box2Message.innerText = `Indicators lack full alignment (RSI6: ${rsi6}, MA Trend: ${isMaBullish ? 'Bullish' : 'Bearish'}, MACD: ${isMacdBullish ? 'Bullish' : 'Bearish'}). Keep cash on sidelines.`;
                 actionSignal = "NO SETUP";
             }
 
@@ -533,7 +737,6 @@
         window.onload = function() {
             loadParams();
             fetchLiveAPIs();
-            runCalculationEngine();
         };
     </script>
 </body>
