@@ -273,10 +273,10 @@
     <div class="container">
         <header>
             <div class="app-title">⚡ BITCOIN MATRIX PRO</div>
-            <div class="subtitle">Live Technical Indicator Sync & Decision Engine</div>
+            <div class="subtitle">Timeframe-Aware Dynamic Strategy Engine</div>
         </header>
 
-        <!-- Live Feeds Banner (Untouched) -->
+        <!-- Live Feeds Banner -->
         <div class="live-bar">
             <div class="live-item">
                 <span class="live-label">Live BTC/USDT</span>
@@ -334,7 +334,6 @@
                     <option value="Deep Red">Deep Red</option>
                 </select>
             </div>
-            <!-- Bypass ETF Toggle -->
             <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-card-alt); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 0;">
                 <label for="bypassEtfToggle" style="margin-bottom:0; color:#ffffff;">Bypass ETF (Pure Technical Mode)</label>
                 <input type="checkbox" id="bypassEtfToggle" onchange="runCalculationEngine()" style="width: 20px; height: 20px; accent-color: var(--accent-blue); cursor: pointer;">
@@ -352,14 +351,14 @@
             </div>
 
             <div class="form-group">
-                <label for="timeframe">Select Timeframe (Auto-Sync Target)</label>
+                <label for="timeframe">Select Timeframe (Transforms Strategy Persona)</label>
                 <select id="timeframe" onchange="onTimeframeChange()">
-                    <option value="1m">1 Minute (Scalp)</option>
-                    <option value="5m" selected>5 Minutes (Intraday)</option>
-                    <option value="15m">15 Minutes (Intraday)</option>
-                    <option value="1h">1 Hour (Swing)</option>
-                    <option value="4h">4 Hours (Swing)</option>
-                    <option value="1d">1 Day (Macro)</option>
+                    <option value="1m">1 Minute (Micro Scalp)</option>
+                    <option value="5m" selected>5 Minutes (High Volatility Scalp)</option>
+                    <option value="15m">15 Minutes (Intraday Momentum)</option>
+                    <option value="1h">1 Hour (Intraday Swing)</option>
+                    <option value="4h">4 Hours (Macro Swing)</option>
+                    <option value="1d">1 Day (Position / Trend)</option>
                 </select>
             </div>
 
@@ -379,7 +378,7 @@
                 </div>
             </div>
 
-            <!-- Multi-Period RSI Indicators (6, 12, 24) -->
+            <!-- Multi-Period RSI Indicators -->
             <div class="grid-3 form-group">
                 <div>
                     <label for="rsi6">RSI 6</label>
@@ -395,7 +394,7 @@
                 </div>
             </div>
 
-            <!-- Moving Averages (MA5, MA10) -->
+            <!-- Moving Averages -->
             <div class="grid-2 form-group">
                 <div>
                     <label for="ma5">MA 5 Value</label>
@@ -458,11 +457,11 @@
                     <div class="metric-value" id="valPositionSize">$0.00</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">Timeframe Volatility</div>
+                    <div class="metric-label">Candle Volatility</div>
                     <div class="metric-value" id="valMarketState">Standby</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">Target Goal</div>
+                    <div class="metric-label">Dynamic Target</div>
                     <div class="metric-value" id="valTargetPrice">$0.00</div>
                 </div>
             </div>
@@ -474,7 +473,7 @@
             </div>
 
             <div id="box2" class="result-card state-green">
-                <div class="res-header">Flexible Multi-TF Strategy & Dual Turnover</div>
+                <div class="res-header">Timeframe-Specific Trading Strategy</div>
                 <div class="res-title" id="box2Title">--</div>
                 <div class="res-message" id="box2Message">--</div>
             </div>
@@ -487,19 +486,14 @@
         </div>
 
         <footer>
-            Standalone HTML5 App • Real-time Data Sync
+            Standalone HTML5 App • Timeframe-Adapted Execution Engine
         </footer>
     </div>
 
     <script>
-        // Global State for Dynamic Candle Volatility & Multi-Timeframe Consensus
-        let liveVolatilityData = { activeTfVolatilityPct: 0.5, isVolatile: false, category: "Standby / Range-Bound" };
+        let liveVolatilityData = { activeTfVolatilityPct: 0.5, isVolatile: false, category: "Standby" };
         let multiTimeframeConsensus = { score: 1, state: "Neutral" };
 
-        // -------------------------------------------------------------
-        // TECHNICAL ANALYSIS CALCULATION ENGINE (RSI, MA, MACD, BB)
-        // -------------------------------------------------------------
-        
         function calculateRSI(closes, period) {
             if (closes.length < period + 1) return 50;
             let gains = 0;
@@ -549,7 +543,6 @@
 
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal) return { macd: 0, signal: 0 };
-            
             let macdLine = [];
             for (let i = slow; i <= closes.length; i++) {
                 let subCloses = closes.slice(0, i);
@@ -557,10 +550,8 @@
                 let slowEma = calculateEMA(subCloses, slow);
                 macdLine.push(fastEma - slowEma);
             }
-
             let currentMacd = macdLine[macdLine.length - 1];
             let currentSignal = calculateEMA(macdLine, signal);
-
             return {
                 macd: parseFloat(currentMacd.toFixed(2)),
                 signal: parseFloat(currentSignal.toFixed(2))
@@ -583,10 +574,6 @@
             };
         }
 
-        // -------------------------------------------------------------
-        // MULTI-TIMEFRAME SIMULTANEOUS CHECK & DYNAMIC VOLATILITY DETECTOR
-        // -------------------------------------------------------------
-
         async function syncAllTechnicalsForTimeframe() {
             const tf = document.getElementById('timeframe').value;
             const badge = document.getElementById('syncBadge');
@@ -601,7 +588,7 @@
                 const closes = data.map(candle => parseFloat(candle[4]));
                 const latestPrice = closes[closes.length - 1];
 
-                // Calculate real-time average candle range (High - Low) / Low for the active timeframe
+                // Calculate actual active candle swing volatility (%)
                 let candleRanges = data.slice(-15).map(c => {
                     let high = parseFloat(c[2]);
                     let low = parseFloat(c[3]);
@@ -610,13 +597,7 @@
                 let avgCandleVol = candleRanges.reduce((a, b) => a + b, 0) / candleRanges.length;
 
                 liveVolatilityData.activeTfVolatilityPct = avgCandleVol;
-                if (avgCandleVol >= 0.8) {
-                    liveVolatilityData.isVolatile = true;
-                    liveVolatilityData.category = `High Volatility (${avgCandleVol.toFixed(2)}% avg candle swing)`;
-                } else {
-                    liveVolatilityData.isVolatile = false;
-                    liveVolatilityData.category = `Stable / Tight (${avgCandleVol.toFixed(2)}% avg candle swing)`;
-                }
+                liveVolatilityData.category = `${avgCandleVol.toFixed(2)}% avg candle swing`;
 
                 document.getElementById('liveBtc').innerText = '$' + latestPrice.toLocaleString('en-US', {maximumFractionDigits: 2});
                 document.getElementById('priceA').value = latestPrice.toFixed(2);
@@ -639,7 +620,6 @@
                 document.getElementById('macdValue').value = macdRes.macd;
                 document.getElementById('macdSignal').value = macdRes.signal;
 
-                // Evaluate Multi-Timeframe Consensus across all timeframes
                 await evaluateMultiTimeframeConsensus();
 
                 badge.className = 'status-badge badge-success';
@@ -671,9 +651,7 @@
                     if (Array.isArray(data) && data.length > 10) {
                         const closes = data.map(c => parseFloat(c[4]));
                         const rsi = calculateRSI(closes, 6);
-                        if (rsi > 50) {
-                            score += 1;
-                        }
+                        if (rsi > 50) score += 1;
                     }
                 });
 
@@ -691,18 +669,17 @@
         function autoSetLevels() {
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const tf = document.getElementById('timeframe').value;
-
             if (priceA <= 0) return;
 
             let supportPct = 0.002;
             let resistancePct = 0.01;
 
-            if (tf === '1m') { supportPct = 0.001; resistancePct = 0.005; }
-            else if (tf === '5m') { supportPct = 0.002; resistancePct = 0.01; }
-            else if (tf === '15m') { supportPct = 0.0035; resistancePct = 0.015; }
+            if (tf === '1m') { supportPct = 0.001; resistancePct = 0.004; }
+            else if (tf === '5m') { supportPct = 0.002; resistancePct = 0.008; }
+            else if (tf === '15m') { supportPct = 0.004; resistancePct = 0.015; }
             else if (tf === '1h') { supportPct = 0.008; resistancePct = 0.025; }
-            else if (tf === '4h') { supportPct = 0.015; resistancePct = 0.04; }
-            else if (tf === '1d') { supportPct = 0.03; resistancePct = 0.08; }
+            else if (tf === '4h') { supportPct = 0.015; resistancePct = 0.05; }
+            else if (tf === '1d') { supportPct = 0.035; resistancePct = 0.10; }
 
             document.getElementById('pinkB').value = (priceA * (1 - supportPct)).toFixed(2);
             document.getElementById('yellowC').value = (priceA * (1 + resistancePct)).toFixed(2);
@@ -712,12 +689,10 @@
             try {
                 const fgRes = await fetch('https://api.alternative.me/fng/');
                 const fgData = await fgRes.json();
-                const fgScore = fgData.data[0].value;
-                document.getElementById('liveFg').innerText = fgScore + '/100';
+                document.getElementById('liveFg').innerText = fgData.data[0].value + '/100';
             } catch (err) {
                 console.log('FG API Error:', err);
             }
-
             syncAllTechnicalsForTimeframe();
         }
 
@@ -727,12 +702,8 @@
         }
 
         function loadParams() {
-            if (localStorage.getItem('btc_cap')) {
-                document.getElementById('totalCapital').value = localStorage.getItem('btc_cap');
-            }
-            if (localStorage.getItem('btc_risk')) {
-                document.getElementById('riskPct').value = localStorage.getItem('btc_risk');
-            }
+            if (localStorage.getItem('btc_cap')) document.getElementById('totalCapital').value = localStorage.getItem('btc_cap');
+            if (localStorage.getItem('btc_risk')) document.getElementById('riskPct').value = localStorage.getItem('btc_risk');
         }
 
         function logExecution(signal) {
@@ -745,7 +716,7 @@
         }
 
         // -------------------------------------------------------------
-        // STRATEGY EVALUATION ENGINE WITH FLEXIBLE MULTI-TF TARGETS
+        // TIMEFRAME-AWARE STRATEGY EXECUTION ENGINE
         // -------------------------------------------------------------
 
         async function runCalculationEngine() {
@@ -782,19 +753,18 @@
 
             const trendRatio = priceA / pinkB;
             
-            // Flexible Volatility-Driven Targets based on actual active timeframe candle swing
+            // Dynamic target based directly on current candle volatility or timeframe scale
             let activeVol = liveVolatilityData.activeTfVolatilityPct;
-            let dynamicProfitTargetPct = Math.max(0.003, activeVol * 1.5) / 100; // Scales dynamically with real volatility
-            if (activeVol >= 1.0) {
-                dynamicProfitTargetPct = activeVol / 100; // If candle moves >1%, target scales to match
-            }
-            let profitTarget = priceA * (1 + dynamicProfitTargetPct);
+            let dynamicTargetPct = Math.max(0.002, activeVol * 1.2) / 100;
+            if (activeVol >= 1.0) dynamicTargetPct = activeVol / 100;
+            
+            let profitTarget = priceA * (1 + dynamicTargetPct);
 
             document.getElementById('valPositionSize').innerText = '$' + posSize.toFixed(2);
             document.getElementById('valMarketState').innerText = `${activeVol.toFixed(2)}% Vol`;
             document.getElementById('valTargetPrice').innerText = '$' + profitTarget.toLocaleString('en-US', {maximumFractionDigits: 2});
 
-            // Macro & CME Rules Evaluation
+            // Macro Gate Validation
             const box1 = document.getElementById('box1');
             const box1Title = document.getElementById('box1Title');
             const box1Message = document.getElementById('box1Message');
@@ -809,14 +779,14 @@
                 if (etfFlow === "Deep Red") {
                     if (isShortTf) {
                         posSize = posSize * 0.5;
-                        macroMsg = " [Short TF Deep Red: Size scaled down 50%]";
+                        macroMsg = " [Short TF Scalp: Size halved against ETF outflow]";
                     } else {
                         macroGatePassed = false;
-                        macroMsg = " [Long TF Deep Red: Gate Closed]";
+                        macroMsg = " [Macro Swing: Institutional outflows block swing entries]";
                     }
                 } else if (etfFlow === "Mixed/Flat/Red" && !isShortTf) {
                     posSize = posSize * 0.5;
-                    macroMsg = " [Long TF Mixed Flow: Range Cap Active]";
+                    macroMsg = " [Mixed Flows: Swing size scaled down 50%]";
                 }
             }
 
@@ -825,19 +795,19 @@
 
             if (!macroGatePassed) {
                 box1.className = 'result-card state-red';
-                box1Title.innerText = '🔴 MACRO GATE CLOSED (DEEP RED ETF)';
-                box1Message.innerText = `High timeframe institutional outflows block trading.${macroMsg}`;
+                box1Title.innerText = '🔴 MACRO GATE CLOSED';
+                box1Message.innerText = `High timeframe institutional headwinds block trading.${macroMsg}`;
             } else if (isGreenMacro) {
                 box1.className = 'result-card state-green';
-                box1Title.innerText = `🟢 MACRO TIDE: BULLISH ACCUMULATION${macroMsg}`;
-                box1Message.innerText = `CME Cuts: ${cmeLower}%, Pause: ${cmeCurrent}%, Hike: ${cmeHike}%. Multi-TF Score: ${multiTimeframeConsensus.score}/6.`;
+                box1Title.innerText = `🟢 MACRO TAILWIND${macroMsg}`;
+                box1Message.innerText = `CME Rates aligned. Multi-TF Score: ${multiTimeframeConsensus.score}/6.`;
             } else {
                 box1.className = 'result-card state-yellow';
-                box1Title.innerText = `🟡 MACRO TIDE: RANGE CONSOLIDATION${macroMsg}`;
-                box1Message.innerText = `CME Rates mixed. Multi-TF Score: ${multiTimeframeConsensus.score}/6. Await support test.`;
+                box1Title.innerText = `🟡 RANGE CONSOLIDATION${macroMsg}`;
+                box1Message.innerText = `Neutral macro structure. Multi-TF Score: ${multiTimeframeConsensus.score}/6.`;
             }
 
-            // Technical Confluence Checks with Bollinger Bands
+            // Technical Validation
             const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
             const isMaBullish = (priceA >= ma5) && (ma5 >= ma10);
             const isMacdBullish = (macdVal >= macdSignal);
@@ -858,34 +828,59 @@
 
             if (!macroGatePassed) {
                 box2.className = 'result-card state-red';
-                box2Title.innerText = '❌ STAND DOWN (MACRO GATE CLOSED)';
-                box2Message.innerText = 'Preserve capital on sidelines due to macro institutional restriction.';
+                box2Title.innerText = '❌ STAND DOWN (GATE CLOSED)';
+                box2Message.innerText = 'Preserve capital on sidelines.';
                 actionSignal = "STAND DOWN";
             } else if (isBuyTrigger && (isGreenMacro || bypassEtf)) {
                 box2.className = 'result-card state-green';
-                
-                // Flexible Dual Turnover Options Driven by Real-Time Candle Volatility
-                let scalpSize = posSize * 0.4;
-                let dailySize = posSize;
-                let scalpTarget = priceA * (1 + (Math.max(0.003, activeVol * 0.8) / 100)); 
-                let dailyTarget = profitTarget;
 
-                box2Title.innerText = `🟢 FLEXIBLE STRATEGY (${tf.toUpperCase()} @ ${activeVol.toFixed(2)}% Vol)`;
-                box2Message.innerHTML = `
-                    <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
-                        ⚡ <strong>Option A (Quick Turnover):</strong> Deploy <strong>$${scalpSize.toFixed(2)}</strong> | Target: <strong>$${scalpTarget.toFixed(2)} (+${((scalpTarget - priceA)/priceA * 100).toFixed(2)}%)</strong> | Multi-TF Score: ${multiTimeframeConsensus.score}/6.
-                    </div>
-                    <div>
-                        📈 <strong>Option B (Full Momentum Swing):</strong> Deploy <strong>$${dailySize.toFixed(2)}</strong> | Target: <strong>$${dailyTarget.toFixed(2)} (+${(dynamicProfitTargetPct * 100).toFixed(2)}%)</strong> | High volatility alignment active.
-                    </div>
-                `;
-                actionSignal = "BUY ORDER (FLEXIBLE DUAL OPTIONS)";
+                // DISTINCT STRATEGY PERSONA PER TIMEFRAME TIER
+                if (tf === '1m' || tf === '5m') {
+                    // Micro Scalp Persona
+                    let scalpTarget = priceA * (1 + Math.max(0.002, activeVol * 0.9) / 100);
+                    box2Title.innerText = `⚡ MICRO SCALP STRATEGY (${tf.toUpperCase()} | ${activeVol.toFixed(2)}% Vol)`;
+                    box2Message.innerHTML = `
+                        <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
+                            🚀 <strong>Execution:</strong> Lightning-fast order-book scalp. Deploy <strong>$${posSize.toFixed(2)}</strong>.
+                        </div>
+                        <div>
+                            🎯 <strong>Target:</strong> <strong>$${scalpTarget.toFixed(2)} (+${((scalpTarget - priceA)/priceA * 100).toFixed(2)}%)</strong> | Exit immediately on momentum stall. Strict tight stop below Pink (B).
+                        </div>
+                    `;
+                    actionSignal = "BUY ORDER (MICRO SCALP)";
+                } else if (tf === '15m' || tf === '1h') {
+                    // Intraday Momentum Persona
+                    let intradayTarget = priceA * (1 + Math.max(0.008, activeVol * 1.5) / 100);
+                    box2Title.innerText = `📈 INTRADAY MOMENTUM STRATEGY (${tf.toUpperCase()} | ${activeVol.toFixed(2)}% Vol)`;
+                    box2Message.innerHTML = `
+                        <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
+                            🌊 <strong>Execution:</strong> Trend-continuation swing. Deploy <strong>$${posSize.toFixed(2)}</strong> on MA5/10 pullback.
+                        </div>
+                        <div>
+                            🎯 <strong>Target:</strong> <strong>$${intradayTarget.toFixed(2)} (+${((intradayTarget - priceA)/priceA * 100).toFixed(2)}%)</strong> | Hold window: 2 to 6 hours. Trail stop below BB Middle.
+                        </div>
+                    `;
+                    actionSignal = "BUY ORDER (INTRADAY MOMENTUM)";
+                } else {
+                    // Macro Swing / Position Persona (4h / 1d)
+                    let macroTarget = priceA * (1 + Math.max(0.02, activeVol * 2.0) / 100);
+                    box2Title.innerText = `🏛️ MACRO POSITION STRATEGY (${tf.toUpperCase()} | ${activeVol.toFixed(2)}% Vol)`;
+                    box2Message.innerHTML = `
+                        <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
+                            🌍 <strong>Execution:</strong> Multi-day trend accumulation. Deploy <strong>$${posSize.toFixed(2)}</strong> at key macro support.
+                        </div>
+                        <div>
+                            🎯 <strong>Target:</strong> <strong>$${macroTarget.toFixed(2)} (+${((macroTarget - priceA)/priceA * 100).toFixed(2)}%)</strong> | Hold window: Days to Weeks. Multi-TF Score: ${multiTimeframeConsensus.score}/6.
+                        </div>
+                    `;
+                    actionSignal = "BUY ORDER (MACRO SWING)";
+                }
             } else {
                 box2.className = 'result-card state-yellow';
                 box2Title.innerText = `🟡 STANDBY (${tf.toUpperCase()} CONSOLIDATION)`;
                 box2Message.innerHTML = `
-                    <div style="margin-bottom:6px;">Active Volatility: ${liveVolatilityData.category}. Multi-TF Score: ${multiTimeframeConsensus.score}/6.</div>
-                    <div>⚡ <em>Strategy:</em> Wait for volatility expansion or test of lower Bollinger Band ($${bbLower}).</div>
+                    <div style="margin-bottom:6px;">Active Candle Volatility: ${liveVolatilityData.category}. Multi-TF Score: ${multiTimeframeConsensus.score}/6.</div>
+                    <div>⚡ <em>Strategy:</em> Await price test of Bollinger Band Lower ($${bbLower}) or volatility breakout.</div>
                 `;
                 actionSignal = "STANDBY / WAIT";
             }
