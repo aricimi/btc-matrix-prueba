@@ -458,7 +458,7 @@
                     <div class="metric-value" id="valPositionSize">$0.00</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">Market Volatility</div>
+                    <div class="metric-label">Timeframe Volatility</div>
                     <div class="metric-value" id="valMarketState">Standby</div>
                 </div>
                 <div class="metric-box">
@@ -474,7 +474,7 @@
             </div>
 
             <div id="box2" class="result-card state-green">
-                <div class="res-header">Dual Turnover Action Options</div>
+                <div class="res-header">Flexible Multi-TF Strategy & Dual Turnover</div>
                 <div class="res-title" id="box2Title">--</div>
                 <div class="res-message" id="box2Message">--</div>
             </div>
@@ -492,8 +492,8 @@
     </div>
 
     <script>
-        // Global Volatility & Multi-Timeframe Consensus State
-        let liveVolatilityData = { dailyRangePct: 1.2, isVolatile: false, category: "Standby / Range-Bound" };
+        // Global State for Dynamic Candle Volatility & Multi-Timeframe Consensus
+        let liveVolatilityData = { activeTfVolatilityPct: 0.5, isVolatile: false, category: "Standby / Range-Bound" };
         let multiTimeframeConsensus = { score: 1, state: "Neutral" };
 
         // -------------------------------------------------------------
@@ -584,7 +584,7 @@
         }
 
         // -------------------------------------------------------------
-        // MULTI-TIMEFRAME SIMULTANEOUS CHECK & VOLATILITY DETECTOR
+        // MULTI-TIMEFRAME SIMULTANEOUS CHECK & DYNAMIC VOLATILITY DETECTOR
         // -------------------------------------------------------------
 
         async function syncAllTechnicalsForTimeframe() {
@@ -594,13 +594,29 @@
             badge.innerText = 'SYNCING...';
 
             try {
-                // 1. Fetch Selected Timeframe for Inputs
                 const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=100`;
                 const response = await fetch(url);
                 const data = await response.json();
 
                 const closes = data.map(candle => parseFloat(candle[4]));
                 const latestPrice = closes[closes.length - 1];
+
+                // Calculate real-time average candle range (High - Low) / Low for the active timeframe
+                let candleRanges = data.slice(-15).map(c => {
+                    let high = parseFloat(c[2]);
+                    let low = parseFloat(c[3]);
+                    return ((high - low) / low) * 100;
+                });
+                let avgCandleVol = candleRanges.reduce((a, b) => a + b, 0) / candleRanges.length;
+
+                liveVolatilityData.activeTfVolatilityPct = avgCandleVol;
+                if (avgCandleVol >= 0.8) {
+                    liveVolatilityData.isVolatile = true;
+                    liveVolatilityData.category = `High Volatility (${avgCandleVol.toFixed(2)}% avg candle swing)`;
+                } else {
+                    liveVolatilityData.isVolatile = false;
+                    liveVolatilityData.category = `Stable / Tight (${avgCandleVol.toFixed(2)}% avg candle swing)`;
+                }
 
                 document.getElementById('liveBtc').innerText = '$' + latestPrice.toLocaleString('en-US', {maximumFractionDigits: 2});
                 document.getElementById('priceA').value = latestPrice.toFixed(2);
@@ -623,7 +639,7 @@
                 document.getElementById('macdValue').value = macdRes.macd;
                 document.getElementById('macdSignal').value = macdRes.signal;
 
-                // 2. Multi-Timeframe Simultaneous Check
+                // Evaluate Multi-Timeframe Consensus across all timeframes
                 await evaluateMultiTimeframeConsensus();
 
                 badge.className = 'status-badge badge-success';
@@ -693,7 +709,6 @@
         }
 
         async function fetchLiveAPIs() {
-            // Live Fear & Greed API
             try {
                 const fgRes = await fetch('https://api.alternative.me/fng/');
                 const fgData = await fgRes.json();
@@ -701,26 +716,6 @@
                 document.getElementById('liveFg').innerText = fgScore + '/100';
             } catch (err) {
                 console.log('FG API Error:', err);
-            }
-
-            // Live Volatility Check via Binance 24hr ticker API
-            try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
-                const data = await res.json();
-                const high = parseFloat(data.highPrice);
-                const low = parseFloat(data.lowPrice);
-                const rangePct = ((high - low) / low) * 100;
-                
-                liveVolatilityData.dailyRangePct = rangePct;
-                if (rangePct >= 2.5) {
-                    liveVolatilityData.isVolatile = true;
-                    liveVolatilityData.category = "High Volatility (Big Swings)";
-                } else {
-                    liveVolatilityData.isVolatile = false;
-                    liveVolatilityData.category = "Standby / Range-Bound (~1% daily fluctuation)";
-                }
-            } catch (err) {
-                console.log('Volatility API Error:', err);
             }
 
             syncAllTechnicalsForTimeframe();
@@ -750,7 +745,7 @@
         }
 
         // -------------------------------------------------------------
-        // STRATEGY EVALUATION ENGINE WITH DUAL TURNOVER & CME EVALUATION
+        // STRATEGY EVALUATION ENGINE WITH FLEXIBLE MULTI-TF TARGETS
         // -------------------------------------------------------------
 
         async function runCalculationEngine() {
@@ -760,7 +755,6 @@
             const riskPct = parseFloat(document.getElementById('riskPct').value) || 25;
             let posSize = capital * (riskPct / 100);
 
-            // CME FedWatch inputs (Lower, Current, Hike)
             const cmeLower = parseFloat(document.getElementById('cmeLower').value) || 0;
             const cmeCurrent = parseFloat(document.getElementById('cmeCurrent').value) || 0;
             const cmeHike = parseFloat(document.getElementById('cmeHike').value) || 0;
@@ -771,7 +765,6 @@
 
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const pinkB = parseFloat(document.getElementById('pinkB').value) || 1;
-            const yellowC = parseFloat(document.getElementById('yellowC').value) || 1;
 
             const rsi6 = parseFloat(document.getElementById('rsi6').value) || 50;
             const rsi12 = parseFloat(document.getElementById('rsi12').value) || 50;
@@ -784,17 +777,21 @@
             const bbLower = parseFloat(document.getElementById('bbLower').value) || priceA;
 
             const macdVal = parseFloat(document.getElementById('macdValue').value) || 0;
-            const macdSig = parseFloat(document.getElementById('macdSignal').value) || 0;
+            const macdSignal = parseFloat(document.getElementById('macdSignal').value) || 0;
             const candleSetup = document.getElementById('candleSetup').value;
 
             const trendRatio = priceA / pinkB;
             
-            const isVol = liveVolatilityData.isVolatile;
-            let profitTargetPct = isVol ? 0.025 : 0.008;
-            let profitTarget = priceA * (1 + profitTargetPct);
+            // Flexible Volatility-Driven Targets based on actual active timeframe candle swing
+            let activeVol = liveVolatilityData.activeTfVolatilityPct;
+            let dynamicProfitTargetPct = Math.max(0.003, activeVol * 1.5) / 100; // Scales dynamically with real volatility
+            if (activeVol >= 1.0) {
+                dynamicProfitTargetPct = activeVol / 100; // If candle moves >1%, target scales to match
+            }
+            let profitTarget = priceA * (1 + dynamicProfitTargetPct);
 
             document.getElementById('valPositionSize').innerText = '$' + posSize.toFixed(2);
-            document.getElementById('valMarketState').innerText = isVol ? 'High Vol' : 'Standby';
+            document.getElementById('valMarketState').innerText = `${activeVol.toFixed(2)}% Vol`;
             document.getElementById('valTargetPrice').innerText = '$' + profitTarget.toLocaleString('en-US', {maximumFractionDigits: 2});
 
             // Macro & CME Rules Evaluation
@@ -823,7 +820,6 @@
                 }
             }
 
-            // CME FedWatch condition: Hike probability must be controlled (<= 25%) and Lower/Current supports risk-on
             const isCmeMacroBullish = (cmeHike <= 25) && (cmeLower + cmeCurrent >= 75);
             const isGreenMacro = bypassEtf || (isCmeMacroBullish && (etfFlow === "Solid Green" || (isShortTf && etfFlow !== "Deep Red")));
 
@@ -844,7 +840,7 @@
             // Technical Confluence Checks with Bollinger Bands
             const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
             const isMaBullish = (priceA >= ma5) && (ma5 >= ma10);
-            const isMacdBullish = (macdVal >= macdSig);
+            const isMacdBullish = (macdVal >= macdSignal);
             const isBbBullish = (priceA >= bbLower && priceA <= bbUpper);
             const isTechnicalBullish = isRsiBullish && isMaBullish && isMacdBullish && isBbBullish;
 
@@ -868,30 +864,30 @@
             } else if (isBuyTrigger && (isGreenMacro || bypassEtf)) {
                 box2.className = 'result-card state-green';
                 
-                // Dual Turnover Options Calculation
+                // Flexible Dual Turnover Options Driven by Real-Time Candle Volatility
                 let scalpSize = posSize * 0.4;
                 let dailySize = posSize;
-                let scalpTarget = priceA * (1 + 0.003); // 0.3% scalp target
+                let scalpTarget = priceA * (1 + (Math.max(0.003, activeVol * 0.8) / 100)); 
                 let dailyTarget = profitTarget;
 
-                box2Title.innerText = '🟢 DUAL TURNOVER STRATEGY OPTIONS READY';
+                box2Title.innerText = `🟢 FLEXIBLE STRATEGY (${tf.toUpperCase()} @ ${activeVol.toFixed(2)}% Vol)`;
                 box2Message.innerHTML = `
                     <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
-                        ⚡ <strong>Option A (Small Turnover Scalping):</strong> Deploy <strong>$${scalpSize.toFixed(2)}</strong> | Target: <strong>$${scalpTarget.toFixed(2)} (+0.3%)</strong> | Ideal for tight ranges & rapid scalps.
+                        ⚡ <strong>Option A (Quick Turnover):</strong> Deploy <strong>$${scalpSize.toFixed(2)}</strong> | Target: <strong>$${scalpTarget.toFixed(2)} (+${((scalpTarget - priceA)/priceA * 100).toFixed(2)}%)</strong> | Multi-TF Score: ${multiTimeframeConsensus.score}/6.
                     </div>
                     <div>
-                        📈 <strong>Option B (Larger Daily Turnover):</strong> Deploy <strong>$${dailySize.toFixed(2)}</strong> | Target: <strong>$${dailyTarget.toFixed(2)} (+${(profitTargetPct * 100).toFixed(1)}%)</strong> | Ideal for trend continuation & swing positions.
+                        📈 <strong>Option B (Full Momentum Swing):</strong> Deploy <strong>$${dailySize.toFixed(2)}</strong> | Target: <strong>$${dailyTarget.toFixed(2)} (+${(dynamicProfitTargetPct * 100).toFixed(2)}%)</strong> | High volatility alignment active.
                     </div>
                 `;
-                actionSignal = "BUY ORDER (DUAL OPTIONS)";
+                actionSignal = "BUY ORDER (FLEXIBLE DUAL OPTIONS)";
             } else {
                 box2.className = 'result-card state-yellow';
-                box2Title.innerText = '🟡 STANDBY MARKET: DUAL SCALP / FLAT';
+                box2Title.innerText = `🟡 STANDBY (${tf.toUpperCase()} CONSOLIDATION)`;
                 box2Message.innerHTML = `
-                    <div style="margin-bottom:6px;">Condition: ${liveVolatilityData.category}.</div>
-                    <div>⚡ <em>Scalp Option:</em> Micro risk only ($${(posSize * 0.2).toFixed(2)}) for 0.1% – 0.3% quick turn.</div>
+                    <div style="margin-bottom:6px;">Active Volatility: ${liveVolatilityData.category}. Multi-TF Score: ${multiTimeframeConsensus.score}/6.</div>
+                    <div>⚡ <em>Strategy:</em> Wait for volatility expansion or test of lower Bollinger Band ($${bbLower}).</div>
                 `;
-                actionSignal = "MICRO SCALP / FLAT";
+                actionSignal = "STANDBY / WAIT";
             }
 
             document.getElementById('resultsWrapper').style.display = 'block';
