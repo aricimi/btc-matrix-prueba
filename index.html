@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BTC Paper Trading Matrix</title>
+  <style>
+    :root {
+      --bg-dark: #07111f;
+      --bg-panel: #0d1b2a;
+      --bg-panel-2: #101f33;
+      --bg-soft: rgba(255,255,255,0.04);
+      --border: rgba(148,163,184,0.18);
+      --text: #e5eefb;
+      --text-soft: #a5b4c9;
+      --cyan: #38bdf8;
+      --green: #22c55e;
+      --green-soft: rgba(34,197,94,0.12);
+      --yellow: #facc15;
+      --yellow-soft: rgba(250,204,21,0.12);
+      --red: #f87171;
+      --red-soft: rgba(248,113,113,0.12);
+      --blue: #3b82f6;
+      --shadow: 0 12px 32px rgba(0,0,0,0.25);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(180deg, #030b14 0%, var(--bg-dark) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px 14px 42px;
+    }
+
+    .app-header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .app-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, #fff 0%, var(--cyan) 70%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .app-subtitle {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
+      text-transform: uppercase;
+    }
+
+    .live-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(13, 27, 42, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .live-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .live-label {
+      font-size: 0.62rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .live-value {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--cyan);
+    }
+
+    .sync-btn,
+    .primary-btn,
+    .secondary-btn {
+      border: none;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .sync-btn {
+      background: rgba(59,130,246,0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(56,189,248,0.3);
+      padding: 8px 12px;
+      font-size: 0.75rem;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 15px 16px;
+      font-size: 1rem;
+      margin: 8px 0 16px;
+      box-shadow: 0 10px 24px rgba(37,99,235,0.35);
+    }
+
+    .secondary-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 14px;
+      font-size: 0.82rem;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .sync-btn:active,
+    .primary-btn:active,
+    .secondary-btn:active {
+      transform: scale(0.98);
+    }
+
+    .card {
+      background: rgba(13, 27, 42, 0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 16px 12px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-soft);
+      border: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-soft);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(148,163,184,0.2);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.94rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(56,189,248,0.8);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.25);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 16px;
+    }
+
+    .metric-box {
+      text-align: center;
+      padding: 8px 4px;
+    }
+
+    .metric-label {
+      font-size: 0.58rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--cyan);
+    }
+
+    .result-card {
+      border-radius: 16px;
+      border: 1.5px solid;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .state-green {
+      background: var(--green-soft);
+      border-color: rgba(34,197,94,0.55);
+    }
+
+    .state-yellow {
+      background: var(--yellow-soft);
+      border-color: rgba(250,204,21,0.6);
+    }
+
+    .state-red {
+      background: var(--red-soft);
+      border-color: rgba(248,113,113,0.6);
+    }
+
+    .res-header {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+
+    .res-title {
+      font-size: 1.05rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .res-message {
+      color: var(--text);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      opacity: 0.95;
+    }
+
+    .state-green .res-title { color: var(--green); }
+    .state-yellow .res-title { color: var(--yellow); }
+    .state-red .res-title { color: var(--red); }
+
+    .log-section {
+      background: rgba(13,27,42,0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px 8px;
+      margin-top: 16px;
+    }
+
+    .log-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-soft);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .log-list {
+      list-style: none;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-soft);
+      font-size: 0.7rem;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    .muted {
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <div class="app-title">BTC PAPER TRADING</div>
+      <div class="app-subtitle">Risk-first Strategy Dashboard</div>
+    </header>
+
+    <div class="live-bar">
+      <div class="live-item">
+        <span class="live-label">BTC/USDT</span>
+        <span class="live-value" id="liveBtc">$0.00</span>
+      </div>
+      <div class="live-item">
+        <span class="live-label">Fear & Greed</span>
+        <span class="live-value" id="liveFg">--</span>
+      </div>
+      <button class="sync-btn" onclick="fetchLiveAPIs()">SYNC</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Account & Risk</div>
+        <span class="pill">safe mode</span>
+      </div>
+
+      <div class="form-group">
+        <label for="accountBalance">Account Balance ($)</label>
+        <input type="number" id="accountBalance" value="1000" min="0" step="any" onchange="saveInputs()">
+      </div>
+
+      <div class="form-group">
+        <label for="riskPerTrade">Risk Per Trade (%)</label>
+        <input type="number" id="riskPerTrade" value="1" min="0.1" max="10" step="0.1" onchange="saveInputs()">
+      </div>
+
+      <div class="two-col">
+        <div class="form-group">
+          <label for="maxDailyLoss">Max Daily Loss (%)</label>
+          <input type="number" id="maxDailyLoss" value="4" min="0.5" max="30" step="0.5" onchange="saveInputs()">
+        </div>
+
+        <div class="form-group">
+          <label for="maxOpenTrades">Max Open Trades</label>
+          <input type="number" id="maxOpenTrades" value="2" min="1" max="10" step="1" onchange="saveInputs()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Trade Setup</div>
+      </div>
+
+      <div class="form-group">
+        <label for="entryPrice">Entry Price</label>
+        <input type="number" id="entryPrice" value="65000" step="any">
+      </div>
+
+      <div class="two-col">
+        <div class="form-group">
+          <label for="stopLoss">Stop Loss</label>
+          <input type="number" id="stopLoss" value="63800" step="any">
+        </div>
+
+        <div class="form-group">
+          <label for="targetPrice">Target Price</label>
+          <input type="number" id="targetPrice" value="68000" step="any">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="macroMood">Macro Mood</label>
+        <select id="macroMood">
+          <option value="Bullish">Bullish</option>
+          <option value="Neutral" selected>Neutral</option>
+          <option value="Bearish">Bearish</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="trendBias">Trend Bias</label>
+        <select id="trendBias">
+          <option value="Uptrend">Uptrend</option>
+          <option value="Range" selected>Range</option>
+          <option value="Downtrend">Downtrend</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="primary-btn" onclick="runPaperTradeEngine()">RUN PAPER-TRADE REVIEW</button>
+
+    <div id="resultsWrapper" style="display: none;">
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">Risk $</div>
+          <div class="metric-value" id="valRisk">$0.00</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Position</div>
+          <div class="metric-value" id="valPosition">0.00 BTC</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">R:R</div>
+          <div class="metric-value" id="valRR">0.00</div>
+        </div>
+      </div>
+
+      <div id="box1" class="result-card state-yellow">
+        <div class="res-header">Risk Review</div>
+        <div class="res-title" id="box1Title">--</div>
+        <div class="res-message" id="box1Message">--</div>
+      </div>
+
+      <div id="box2" class="result-card state-yellow">
+        <div class="res-header">Execution Decision</div>
+        <div class="res-title" id="box2Title">--</div>
+        <div class="res-message" id="box2Message">--</div>
+      </div>
+
+      <div class="log-section">
+        <div class="log-title">Paper Trade Log</div>
+        <ul id="logList" class="log-list"></ul>
+      </div>
+    </div>
+
+    <footer>
+      Educational paper-trading dashboard only.<br />
+      Not financial advice. No live execution.
+    </footer>
+  </div>
+
+  <script>
+    function saveInputs() {
+      const keys = [
+        "btc_account_balance",
+        "btc_risk_per_trade",
+        "btc_max_daily_loss",
+        "btc_max_open_trades"
+      ];
+
+      const values = [
+        document.getElementById("accountBalance").value,
+        document.getElementById("riskPerTrade").value,
+        document.getElementById("maxDailyLoss").value,
+        document.getElementById("maxOpenTrades").value
+      ];
+
+      keys.forEach((key, index) => {
+        localStorage.setItem(key, values[index]);
+      });
+    }
+
+    function loadInputs() {
+      const map = {
+        "btc_account_balance": "accountBalance",
+        "btc_risk_per_trade": "riskPerTrade",
+        "btc_max_daily_loss": "maxDailyLoss",
+        "btc_max_open_trades": "maxOpenTrades"
+      };
+
+      Object.entries(map).forEach(([key, id]) => {
+        const value = localStorage.getItem(key);
+        if (value !== null && value !== "") {
+          document.getElementById(id).value = value;
+        }
+      });
+    }
+
+    async function fetchLiveAPIs() {
+      try {
+        const btcRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
+        if (!btcRes.ok) throw new Error("Binance request failed");
+
+        const btcData = await btcRes.json();
+        const currentPrice = parseFloat(btcData.price);
+
+        document.getElementById("liveBtc").innerText = "$" + currentPrice.toLocaleString("en-US", {
+          maximumFractionDigits: 2
+        });
+
+        document.getElementById("entryPrice").value = currentPrice.toFixed(2);
+
+        const fgRes = await fetch("https://api.alternative.me/fng/");
+        if (!fgRes.ok) throw new Error("Fear and Greed request failed");
+
+        const fgData = await fgRes.json();
+        const fgValue = Number(fgData?.data?.[0]?.value ?? 0);
+
+        document.getElementById("liveFg").innerText = fgValue + "/100";
+      } catch (err) {
+        console.error("API fetch failed:", err);
+        document.getElementById("liveBtc").innerText = "$--";
+        document.getElementById("liveFg").innerText = "--";
+      }
+    }
+
+    function logTrade(message, value) {
+      const list = document.getElementById("logList");
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const item = document.createElement("li");
+      item.className = "log-item";
+      item.innerHTML = `<span>${time} • ${message}</span><span>${value}</span>`;
+      list.prepend(item);
+    }
+
+    function formatMoney(v) {
+      return "$" + Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+
+    function calculatePaperTrade() {
+      const accountBalance = parseFloat(document.getElementById("accountBalance").value) || 1000;
+      const riskPercent = parseFloat(document.getElementById("riskPerTrade").value) || 1;
+      const maxDailyLoss = parseFloat(document.getElementById("maxDailyLoss").value) || 4;
+      const entry = parseFloat(document.getElementById("entryPrice").value) || 0;
+      const stop = parseFloat(document.getElementById("stopLoss").value) || 0;
+      const target = parseFloat(document.getElementById("targetPrice").value) || 0;
+      const macroMood = document.getElementById("macroMood").value;
+      const trendBias = document.getElementById("trendBias").value;
+
+      if (entry <= 0 || stop <= 0 || target <= 0) {
+        return {
+          valid: false,
+          message: "Entry, stop, and target price must be greater than zero."
+        };
+      }
+
+      const riskAmount = accountBalance * (riskPercent / 100);
+      const stopDistance = Math.abs(entry - stop);
+      const targetDistance = Math.abs(target - entry);
+      const rr = targetDistance / Math.max(stopDistance, 0.0001);
+
+      let positionSizeUsd = 0;
+      let positionSizeBtc = 0;
+
+      if (stopDistance > 0) {
+        positionSizeUsd = riskAmount / (stopDistance / entry);
+        positionSizeBtc = positionSizeUsd / entry;
+      }
+
+      const maxDailyLossAmount = accountBalance * (maxDailyLoss / 100);
+
+      const isValidRisk = stopDistance > 0 && riskAmount > 0 && riskAmount <= accountBalance * 0.1;
+      const isValidRR = rr >= 1.5;
+      const isMacroAligned = !(macroMood === "Bearish" && trendBias !== "Downtrend");
+
+      document.getElementById("valRisk").innerText = formatMoney(riskAmount);
+      document.getElementById("valPosition").innerText = positionSizeBtc.toFixed(4) + " BTC";
+      document.getElementById("valRR").innerText = rr.toFixed(2);
+
+      let state = "yellow";
+      let title = "⚠️ REVIEW REQUIRED";
+      let message = "Trade setup is not yet strong enough to risk capital.";
+
+      if (!isValidRisk) {
+        title = "❌ INVALID RISK PLAN";
+        message = "Stop distance is too small or risk amount is too large relative to your balance.";
+        state = "red";
+      } else if (!isMacroAligned) {
+        title = "🟡 MACRO MISALIGNMENT";
+        message = "The current market mood and trend bias do not support aggressive entry.";
+        state = "yellow";
+      } else if (!isValidRR) {
+        title = "🟡 RISK/REWARD TOO WEAK";
+        message = `Current reward-to-risk is ${rr.toFixed(2)}. Prefer at least 1.5:1 before sizing a trade.`;
+        state = "yellow";
+      } else {
+        title = "✅ PAPER TRADE ACCEPTABLE";
+        message = `Risk is controlled. This setup can be monitored with a defined stop and target.`;
+        state = "green";
+      }
+
+      const decisionState = state === "green" ? "paper buy setup" : state === "red" ? "do not take trade" : "wait for better setup";
+      let decisionMessage = "";
+
+      if (state === "green") {
+        decisionMessage = `Paper risk budget: ${formatMoney(riskAmount)}. Intended stop is $${stop.toFixed(2)} and target is $${target.toFixed(2)}. Keep position size inside the daily loss limit of ${formatMoney(maxDailyLossAmount)}.`;
+      } else if (state === "yellow") {
+        decisionMessage = `Wait for confirmation. Do not force the trade. Review structure, trend, and macro alignment before entering a paper position.`;
+      } else {
+        decisionMessage = `This setup fails the risk-first checklist. Avoid taking a paper trade until the plan improves.`;
+      }
+
+      return {
+        valid: state === "green",
+        riskAmount,
+        positionSizeBtc,
+        rr,
+        state,
+        title,
+        message,
+        decisionState,
+        decisionMessage,
+        maxDailyLossAmount
+      };
+    }
+
+    function runPaperTradeEngine() {
+      const result = calculatePaperTrade();
+
+      const box1 = document.getElementById("box1");
+      const box1Title = document.getElementById("box1Title");
+      const box1Message = document.getElementById("box1Message");
+
+      const box2 = document.getElementById("box2");
+      const box2Title = document.getElementById("box2Title");
+      const box2Message = document.getElementById("box2Message");
+
+      box1.className = "result-card state-" + result.state;
+      box1Title.innerText = result.title;
+      box1Message.innerText = result.message;
+
+      box2.className = "result-card state-" + (result.valid ? "green" : result.state);
+      box2Title.innerText = result.valid ? "✅ PAPER TRADE READY" : "⚠️ PAPER TRADE WAIT";
+      box2Message.innerText = result.decisionMessage;
+
+      document.getElementById("resultsWrapper").style.display = "block";
+
+      logTrade("Setup reviewed", `R:R ${result.rr.toFixed(2)}`);
+      logTrade("Risk budget", formatMoney(result.riskAmount));
+      logTrade("Position size", `${result.positionSizeBtc.toFixed(4)} BTC`);
+      logTrade("Decision", result.valid ? "Monitor / paper entry" : "Stand down");
+    }
+
+    window.onload = function() {
+      loadInputs();
+      fetchLiveAPIs();
+      runPaperTradeEngine();
+    };
+  </script>
+</body>
+</html>
