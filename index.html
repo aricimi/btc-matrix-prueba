@@ -127,9 +127,7 @@
             cursor: pointer;
         }
 
-        .btn-sync:active {
-            opacity: 0.7;
-        }
+        .btn-sync:active { opacity: 0.7; }
 
         .card {
             background: var(--bg-card);
@@ -155,21 +153,9 @@
             color: #ffffff;
         }
 
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-        }
+        .form-group { margin-bottom: 14px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
         label {
             display: block;
@@ -321,7 +307,6 @@
                     <option value="Deep Red">Deep Red</option>
                 </select>
             </div>
-            <!-- Bypass ETF Toggle -->
             <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-card-alt); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 0;">
                 <label for="bypassEtfToggle" style="margin-bottom:0; color:#ffffff;">Bypass ETF (Pure Technical Mode)</label>
                 <input type="checkbox" id="bypassEtfToggle" onchange="runCalculationEngine()" style="width: 20px; height: 20px; accent-color: var(--accent-blue); cursor: pointer;">
@@ -335,18 +320,18 @@
                     3. Technical Indicators
                     <span id="syncBadge" class="status-badge badge-success">AUTO READY</span>
                 </div>
-                <button class="btn-sync" onclick="syncAllTechnicalsForTimeframe()">🔄 Auto Sync Technicals</button>
+                <button class="btn-sync" onclick="syncAllTechnicalsForTimeframe()">🔄 Auto Sync</button>
             </div>
 
             <div class="form-group">
-                <label for="timeframe">Select Timeframe (Auto-Sync Target)</label>
+                <label for="timeframe">Select Timeframe Mode</label>
                 <select id="timeframe" onchange="onTimeframeChange()">
-                    <option value="1m">1 Minute (Scalp)</option>
-                    <option value="5m" selected>5 Minutes (Intraday)</option>
-                    <option value="15m">15 Minutes (Intraday)</option>
-                    <option value="1h">1 Hour (Swing)</option>
-                    <option value="4h">4 Hours (Swing)</option>
-                    <option value="1d">1 Day (Macro)</option>
+                    <option value="1m">1 Minute (Scalp Mode: BB %B & RSI)</option>
+                    <option value="5m" selected>5 Minutes (Scalp Mode: BB %B & RSI)</option>
+                    <option value="15m">15 Minutes (Intraday: SMA20 & MACD)</option>
+                    <option value="1h">1 Hour (Intraday: SMA20 & MACD)</option>
+                    <option value="4h">4 Hours (Macro Swing Mode)</option>
+                    <option value="1d">1 Day (Macro Swing Mode)</option>
                 </select>
             </div>
 
@@ -357,16 +342,16 @@
                     <input type="number" id="priceA" value="65000" step="any" oninput="autoSetLevels()">
                 </div>
                 <div>
-                    <label for="pinkB">Pink (B)</label>
+                    <label for="pinkB">Pink (B - Support)</label>
                     <input type="number" id="pinkB" value="64850" step="any">
                 </div>
                 <div>
-                    <label for="yellowC">Yellow (C)</label>
+                    <label for="yellowC">Yellow (C - Resistance)</label>
                     <input type="number" id="yellowC" value="66200" step="any">
                 </div>
             </div>
 
-            <!-- Multi-Period RSI Indicators (6, 12, 24) -->
+            <!-- Multi-Period RSI (6, 12, 24) -->
             <div class="grid-3 form-group">
                 <div>
                     <label for="rsi6">RSI 6</label>
@@ -382,7 +367,7 @@
                 </div>
             </div>
 
-            <!-- Moving Averages (MA5, MA10) -->
+            <!-- Moving Averages & Bollinger %B Display -->
             <div class="grid-2 form-group">
                 <div>
                     <label for="ma5">MA 5 Value</label>
@@ -391,6 +376,17 @@
                 <div>
                     <label for="ma10">MA 10 Value</label>
                     <input type="number" id="ma10" value="64950" step="any">
+                </div>
+            </div>
+
+            <div class="grid-2 form-group">
+                <div>
+                    <label for="bbPercentB">Bollinger Band %B (Scalp)</label>
+                    <input type="number" id="bbPercentB" value="0.50" step="any" readonly>
+                </div>
+                <div>
+                    <label for="sma20">SMA 20 (Intraday)</label>
+                    <input type="number" id="sma20" value="65000" step="any" readonly>
                 </div>
             </div>
 
@@ -450,7 +446,6 @@
                 <div class="res-message" id="box2Message">--</div>
             </div>
 
-            <!-- Execution Audit Log -->
             <div class="log-section">
                 <div class="log-title">Recent Audit Log</div>
                 <ul class="log-list" id="logList"></ul>
@@ -463,28 +458,18 @@
     </div>
 
     <script>
-        // Global Volatility & Multi-Timeframe Consensus State
         let liveVolatilityData = { dailyRangePct: 1.2, isVolatile: false, category: "Standby / Range-Bound" };
         let multiTimeframeConsensus = { score: 1, state: "Neutral" };
 
-        // -------------------------------------------------------------
-        // TECHNICAL ANALYSIS CALCULATION ENGINE (RSI, MA, MACD)
-        // -------------------------------------------------------------
-        
+        // --- TECHNICAL ANALYSIS ENGINE ---
         function calculateRSI(closes, period) {
             if (closes.length < period + 1) return 50;
-            let gains = 0;
-            let losses = 0;
-
+            let gains = 0, losses = 0;
             for (let i = 1; i <= period; i++) {
                 let change = closes[i] - closes[i - 1];
-                if (change >= 0) gains += change;
-                else losses -= change;
+                if (change >= 0) gains += change; else losses -= change;
             }
-
-            let avgGain = gains / period;
-            let avgLoss = losses / period;
-
+            let avgGain = gains / period, avgLoss = losses / period;
             for (let i = period + 1; i < closes.length; i++) {
                 let change = closes[i] - closes[i - 1];
                 if (change >= 0) {
@@ -495,17 +480,14 @@
                     avgLoss = (avgLoss * (period - 1) - change) / period;
                 }
             }
-
             if (avgLoss === 0) return 100;
-            let rs = avgGain / avgLoss;
-            return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
+            return parseFloat((100 - (100 / (1 + (avgGain / avgLoss)))).toFixed(2));
         }
 
         function calculateSMA(closes, period) {
             if (closes.length < period) return closes[closes.length - 1];
             let slice = closes.slice(closes.length - period);
-            let sum = slice.reduce((a, b) => a + b, 0);
-            return parseFloat((sum / period).toFixed(2));
+            return parseFloat((slice.reduce((a, b) => a + b, 0) / period).toFixed(2));
         }
 
         function calculateEMA(closes, period) {
@@ -520,28 +502,36 @@
 
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal) return { macd: 0, signal: 0 };
-            
             let macdLine = [];
             for (let i = slow; i <= closes.length; i++) {
                 let subCloses = closes.slice(0, i);
-                let fastEma = calculateEMA(subCloses, fast);
-                let slowEma = calculateEMA(subCloses, slow);
-                macdLine.push(fastEma - slowEma);
+                macdLine.push(calculateEMA(subCloses, fast) - calculateEMA(subCloses, slow));
             }
-
-            let currentMacd = macdLine[macdLine.length - 1];
-            let currentSignal = calculateEMA(macdLine, signal);
-
             return {
-                macd: parseFloat(currentMacd.toFixed(2)),
-                signal: parseFloat(currentSignal.toFixed(2))
+                macd: parseFloat(macdLine[macdLine.length - 1].toFixed(2)),
+                signal: parseFloat(calculateEMA(macdLine, signal).toFixed(2))
             };
         }
 
-        // -------------------------------------------------------------
-        // MULTI-TIMEFRAME SIMULTANEOUS CHECK & VOLATILITY DETECTOR
-        // -------------------------------------------------------------
+        function calculateBollingerBands(closes, period = 20, multiplier = 2) {
+            if (closes.length < period) return { upper: closes[closes.length-1], middle: closes[closes.length-1], lower: closes[closes.length-1], percentB: 0.5 };
+            let slice = closes.slice(closes.length - period);
+            let middle = slice.reduce((a, b) => a + b, 0) / period;
+            let variance = slice.reduce((sum, val) => sum + Math.pow(val - middle, 2), 0) / period;
+            let stdev = Math.sqrt(variance);
+            let upper = middle + (multiplier * stdev);
+            let lower = middle - (multiplier * stdev);
+            let currentPrice = closes[closes.length - 1];
+            let percentB = (upper - lower) !== height = (currentPrice - lower) / (upper - lower);
+            return {
+                upper: parseFloat(upper.toFixed(2)),
+                middle: parseFloat(middle.toFixed(2)),
+                lower: parseFloat(lower.toFixed(2)),
+                percentB: parseFloat(((currentPrice - lower) / (upper - lower || 1)).toFixed(2))
+            };
+        }
 
+        // --- LIVE SYNC & MULTI-TIMEFRAME CONSENSUS ---
         async function syncAllTechnicalsForTimeframe() {
             const tf = document.getElementById('timeframe').value;
             const badge = document.getElementById('syncBadge');
@@ -552,13 +542,11 @@
                 const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=100`;
                 const response = await fetch(url);
                 const data = await response.json();
-
                 const closes = data.map(candle => parseFloat(candle[4]));
                 const latestPrice = closes[closes.length - 1];
 
                 document.getElementById('liveBtc').innerText = '$' + latestPrice.toLocaleString('en-US', {maximumFractionDigits: 2});
                 document.getElementById('priceA').value = latestPrice.toFixed(2);
-
                 autoSetLevels();
 
                 document.getElementById('rsi6').value = calculateRSI(closes, 6);
@@ -567,6 +555,10 @@
 
                 document.getElementById('ma5').value = calculateSMA(closes, 5);
                 document.getElementById('ma10').value = calculateSMA(closes, 10);
+                document.getElementById('sma20').value = calculateSMA(closes, 20);
+
+                const bb = calculateBollingerBands(closes, 20, 2);
+                document.getElementById('bbPercentB').value = bb.percentB;
 
                 const macdRes = calculateMACD(closes, 12, 26, 9);
                 document.getElementById('macdValue').value = macdRes.macd;
@@ -576,11 +568,9 @@
 
                 badge.className = 'status-badge badge-success';
                 badge.innerText = `SYNCED (${tf.toUpperCase()})`;
-
                 runCalculationEngine();
-
             } catch (err) {
-                console.error("Technical Sync Error: ", err);
+                console.error("Sync Error: ", err);
                 badge.className = 'status-badge';
                 badge.style.background = 'rgba(239, 68, 68, 0.2)';
                 badge.style.color = '#ef4444';
@@ -595,47 +585,33 @@
                     fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=50`)
                         .then(res => res.json())
                 );
-                
                 const results = await Promise.all(requests);
                 let score = 0;
-                
                 results.forEach((data) => {
                     if (Array.isArray(data) && data.length > 10) {
                         const closes = data.map(c => parseFloat(c[4]));
-                        const rsi = calculateRSI(closes, 6);
-                        if (rsi > 50) {
-                            score += 1;
-                        }
+                        if (calculateRSI(closes, 6) > 50) score += 1;
                     }
                 });
-
                 multiTimeframeConsensus.score = score;
-                multiTimeframeConsensus.state = score >= 4 ? "Bullish Alignment" : (score <= 2 ? "Bearish / Range" : "Mixed Consensus");
             } catch (err) {
                 console.log("Multi-TF Consensus Error:", err);
             }
         }
 
-        function onTimeframeChange() {
-            syncAllTechnicalsForTimeframe();
-        }
+        function onTimeframeChange() { syncAllTechnicalsForTimeframe(); }
 
         function autoSetLevels() {
             const priceA = parseFloat(document.getElementById('priceA').value) || 0;
             const tf = document.getElementById('timeframe').value;
-
             if (priceA <= 0) return;
-
-            let supportPct = 0.002;
-            let resistancePct = 0.01;
-
+            let supportPct = 0.002, resistancePct = 0.01;
             if (tf === '1m') { supportPct = 0.001; resistancePct = 0.005; }
             else if (tf === '5m') { supportPct = 0.002; resistancePct = 0.01; }
             else if (tf === '15m') { supportPct = 0.0035; resistancePct = 0.015; }
             else if (tf === '1h') { supportPct = 0.008; resistancePct = 0.025; }
             else if (tf === '4h') { supportPct = 0.015; resistancePct = 0.04; }
             else if (tf === '1d') { supportPct = 0.03; resistancePct = 0.08; }
-
             document.getElementById('pinkB').value = (priceA * (1 - supportPct)).toFixed(2);
             document.getElementById('yellowC').value = (priceA * (1 + resistancePct)).toFixed(2);
         }
@@ -644,30 +620,17 @@
             try {
                 const fgRes = await fetch('https://api.alternative.me/fng/');
                 const fgData = await fgRes.json();
-                const fgScore = fgData.data[0].value;
-                document.getElementById('liveFg').innerText = fgScore + '/100';
-            } catch (err) {
-                console.log('FG API Error:', err);
-            }
+                document.getElementById('liveFg').innerText = fgData.data[0].value + '/100';
+            } catch (err) { console.log('FG API Error:', err); }
 
             try {
                 const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
                 const data = await res.json();
-                const high = parseFloat(data.highPrice);
-                const low = parseFloat(data.lowPrice);
-                const rangePct = ((high - low) / low) * 100;
-                
+                const rangePct = ((parseFloat(data.highPrice) - parseFloat(data.lowPrice)) / parseFloat(data.lowPrice)) * 100;
                 liveVolatilityData.dailyRangePct = rangePct;
-                if (rangePct >= 2.5) {
-                    liveVolatilityData.isVolatile = true;
-                    liveVolatilityData.category = "High Volatility (Big Swings)";
-                } else {
-                    liveVolatilityData.isVolatile = false;
-                    liveVolatilityData.category = "Standby / Range-Bound (~1% daily fluctuation)";
-                }
-            } catch (err) {
-                console.log('Volatility API Error:', err);
-            }
+                liveVolatilityData.isVolatile = rangePct >= 2.5;
+                liveVolatilityData.category = liveVolatilityData.isVolatile ? "High Volatility (Big Swings)" : "Standby / Range-Bound";
+            } catch (err) { console.log('Volatility API Error:', err); }
 
             syncAllTechnicalsForTimeframe();
         }
@@ -678,12 +641,8 @@
         }
 
         function loadParams() {
-            if (localStorage.getItem('btc_cap')) {
-                document.getElementById('totalCapital').value = localStorage.getItem('btc_cap');
-            }
-            if (localStorage.getItem('btc_risk')) {
-                document.getElementById('riskPct').value = localStorage.getItem('btc_risk');
-            }
+            if (localStorage.getItem('btc_cap')) document.getElementById('totalCapital').value = localStorage.getItem('btc_cap');
+            if (localStorage.getItem('btc_risk')) document.getElementById('riskPct').value = localStorage.getItem('btc_risk');
         }
 
         function logExecution(signal) {
@@ -695,10 +654,7 @@
             list.prepend(item);
         }
 
-        // -------------------------------------------------------------
-        // STRATEGY EVALUATION ENGINE WITH UPDATED CONDITIONAL LOGIC
-        // -------------------------------------------------------------
-
+        // --- YOUR EXACT CALCULATION ENGINE SNIPPET & CONFLUENCE CHECKS ---
         async function runCalculationEngine() {
             await evaluateMultiTimeframeConsensus();
 
@@ -762,7 +718,6 @@
 
             const isGreenMacro = bypassEtf || ((fedWatch >= 75) && (etfFlow === "Solid Green" || (isShortTf && etfFlow !== "Deep Red")));
 
-            // Box 1 Evaluation
             if (!macroGatePassed) {
                 box1.className = 'result-card state-red';
                 box1Title.innerText = '🔴 MACRO GATE CLOSED (DEEP RED ETF)';
