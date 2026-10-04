@@ -56,7 +56,7 @@
             width: 100%;
             max-width: 480px;
             padding: 16px;
-            padding-bottom: 50px;
+            padding-bottom: 40px;
         }
 
         header {
@@ -72,6 +72,10 @@
             background: linear-gradient(135deg, #ffffff 0%, var(--cyan-glow) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .subtitle {
@@ -149,9 +153,6 @@
             font-size: 0.95rem;
             font-weight: 700;
             color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .form-group {
@@ -178,7 +179,7 @@
             font-weight: 600;
         }
 
-        select, input {
+        input[type="number"], select {
             width: 100%;
             background: var(--bg-card-alt);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -192,412 +193,615 @@
             appearance: none;
         }
 
-        /* Toggle Switch */
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-card-alt);
-            padding: 12px 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            margin-top: 12px;
-            margin-bottom: 14px;
-        }
-
-        .toggle-label {
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 48px;
-            height: 26px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #334155;
-            transition: .3s;
-            border-radius: 26px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--accent-blue);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
-
         .status-badge {
-            font-size: 0.65rem;
-            padding: 3px 8px;
-            border-radius: 6px;
+            font-size: 0.68rem;
+            padding: 2px 6px;
+            border-radius: 4px;
             font-weight: 700;
-            text-transform: uppercase;
+            margin-left: 6px;
+            display: inline-block;
         }
+        .badge-syncing { background: rgba(56, 189, 248, 0.2); color: var(--cyan-glow); }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--green-glow); }
 
-        .badge-active {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid var(--green-border);
-        }
-
-        .badge-bypassed {
-            background: rgba(234, 179, 8, 0.2);
-            color: #facc15;
-            border: 1px solid var(--yellow-border);
-        }
-
-        /* Output Matrix Box */
-        .output-box {
-            background: var(--bg-card-alt);
-            border-radius: 12px;
+        .btn-calc {
+            width: 100%;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: none;
             padding: 16px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-
-        .signal-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .signal-state {
-            font-size: 1.4rem;
-            font-weight: 900;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            margin-top: 8px;
+            margin-bottom: 20px;
         }
 
         .metrics-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-top: 12px;
+            margin-bottom: 16px;
+            background: rgba(10, 15, 29, 0.8);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .metric-pill {
-            background: rgba(0, 0, 0, 0.25);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .metric-box { text-align: center; }
+        .metric-label { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .metric-value { font-size: 0.88rem; font-weight: 700; color: var(--cyan-glow); }
+
+        .result-card {
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            border-width: 1.5px;
+            border-style: solid;
         }
 
-        .metric-pill-label {
-            font-size: 0.62rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
+        .state-green { background: var(--green-bg); border-color: var(--green-border); color: #ffffff; }
+        .state-green .res-title { color: var(--green-glow); }
+        .state-yellow { background: var(--yellow-bg); border-color: var(--yellow-border); color: #ffffff; }
+        .state-yellow .res-title { color: var(--yellow-glow); }
+        .state-red { background: var(--red-bg); border-color: var(--red-border); color: #ffffff; }
+        .state-red .res-title { color: var(--red-glow); }
+
+        .res-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; }
+        .res-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 8px; }
+        .res-message { font-size: 0.88rem; line-height: 1.45; color: #e2e8f0; }
+
+        .log-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 16px;
+            border: 1px solid var(--border-color);
         }
 
-        .metric-pill-val {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-top: 2px;
-        }
+        .log-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+        .log-list { list-style: none; max-height: 120px; overflow-y: auto; font-size: 0.75rem; }
+        .log-item { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
 
-        .rationale {
-            margin-top: 12px;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-            text-align: left;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 8px;
-        }
+        footer { text-align: center; font-size: 0.7rem; color: var(--text-muted); margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <header>
-            <div class="app-title">⚡ Bitcoin Trading Matrix Pro</div>
-            <div class="subtitle">iOS Institutional & Technical Engine</div>
+            <div class="app-title">⚡ BITCOIN MATRIX PRO</div>
+            <div class="subtitle">Live Technical Indicator Sync & Decision Engine</div>
         </header>
 
-        <!-- Live Price & Sync Bar -->
+        <!-- Live Feeds Banner -->
         <div class="live-bar">
             <div class="live-item">
-                <span class="live-label">Binance Spot</span>
-                <span id="livePrice" class="live-val">Loading...</span>
+                <span class="live-label">Live BTC/USDT</span>
+                <span class="live-val" id="liveBtc">$0.00</span>
             </div>
-            <button class="btn-sync" onclick="fetchBinanceData()">Sync OHLCV</button>
+            <div class="live-item">
+                <span class="live-label">Fear & Greed</span>
+                <span class="live-val" id="liveFg">--</span>
+            </div>
+            <button class="btn-sync" onclick="fetchLiveAPIs()">🔄 Sync Price</button>
         </div>
 
-        <!-- Section 1: Timeframe & Technical Confluence -->
+        <!-- Bankroll & Risk Management -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">📊 Technical Confluence</div>
+                <div class="card-title">1. Portfolio Risk Parameters</div>
+            </div>
+            <div class="form-group">
+                <label for="totalCapital">Total Trading Bankroll ($)</label>
+                <input type="number" id="totalCapital" value="1000" onchange="saveParams()">
+            </div>
+            <div class="form-group">
+                <label for="riskPct">Max Risk Allocation Per Trade (%)</label>
+                <input type="number" id="riskPct" value="25" min="1" max="100" onchange="saveParams()">
+            </div>
+        </div>
+
+        <!-- Macro Inputs -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">2. Macro Metrics</div>
+            </div>
+            <div class="form-group">
+                <label for="fedwatch">CME FedWatch: Cut/Pause Probability (%)</label>
+                <input type="number" id="fedwatch" value="78" min="0" max="100">
+            </div>
+            <div class="form-group">
+                <label for="etfFlow">Institutional ETF Net Flow</label>
+                <select id="etfFlow" onchange="runCalculationEngine()">
+                    <option value="Solid Green" selected>Solid Green</option>
+                    <option value="Mixed/Flat/Red">Mixed/Flat/Red</option>
+                    <option value="Deep Red">Deep Red</option>
+                </select>
+            </div>
+            <!-- Added Bypass ETF Toggle -->
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-card-alt); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 0;">
+                <label for="bypassEtfToggle" style="margin-bottom:0; color:#ffffff;">Bypass ETF (Pure Technical Mode)</label>
+                <input type="checkbox" id="bypassEtfToggle" onchange="runCalculationEngine()" style="width: 20px; height: 20px; accent-color: var(--accent-blue); cursor: pointer;">
+            </div>
+        </div>
+
+        <!-- Technical Structure & Live Sync Indicators -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    3. Technical Indicators
+                    <span id="syncBadge" class="status-badge badge-success">AUTO READY</span>
+                </div>
+                <button class="btn-sync" onclick="syncAllTechnicalsForTimeframe()">🔄 Auto Sync Technicals</button>
             </div>
 
+            <!-- Timeframe Selection Trigger -->
+            <div class="form-group">
+                <label for="timeframe">Select Timeframe (Auto-Sync Target)</label>
+                <select id="timeframe" onchange="onTimeframeChange()">
+                    <option value="1m">1 Minute (Scalp)</option>
+                    <option value="5m" selected>5 Minutes (Intraday)</option>
+                    <option value="15m">15 Minutes (Intraday)</option>
+                    <option value="1h">1 Hour (Swing)</option>
+                    <option value="4h">4 Hours (Swing)</option>
+                    <option value="1d">1 Day (Macro)</option>
+                </select>
+            </div>
+
+            <!-- Price & Support Levels -->
+            <div class="grid-3 form-group">
+                <div>
+                    <label for="priceA">Price (A)</label>
+                    <input type="number" id="priceA" value="65000" step="any" oninput="autoSetLevels()">
+                </div>
+                <div>
+                    <label for="pinkB">Pink (B)</label>
+                    <input type="number" id="pinkB" value="64850" step="any">
+                </div>
+                <div>
+                    <label for="yellowC">Yellow (C)</label>
+                    <input type="number" id="yellowC" value="66200" step="any">
+                </div>
+            </div>
+
+            <!-- Multi-Period RSI Indicators (6, 12, 24) -->
+            <div class="grid-3 form-group">
+                <div>
+                    <label for="rsi6">RSI 6</label>
+                    <input type="number" id="rsi6" value="50" min="0" max="100">
+                </div>
+                <div>
+                    <label for="rsi12">RSI 12</label>
+                    <input type="number" id="rsi12" value="50" min="0" max="100">
+                </div>
+                <div>
+                    <label for="rsi24">RSI 24</label>
+                    <input type="number" id="rsi24" value="50" min="0" max="100">
+                </div>
+            </div>
+
+            <!-- Moving Averages (MA5, MA10) -->
             <div class="grid-2 form-group">
                 <div>
-                    <label>Timeframe</label>
-                    <select id="timeframe" onchange="runMatrixEngine()">
-                        <option value="1m">1m (Scalp)</option>
-                        <option value="5m" selected>5m (Scalp)</option>
-                        <option value="15m">15m (Intraday)</option>
-                        <option value="1h">1h (Swing)</option>
-                        <option value="4h">4h (Macro Swing)</option>
-                        <option value="1d">1d (Position)</option>
-                    </select>
+                    <label for="ma5">MA 5 Value</label>
+                    <input type="number" id="ma5" value="65000" step="any">
                 </div>
                 <div>
-                    <label>RSI 6 / 12 / 24</label>
-                    <select id="rsiState" onchange="runMatrixEngine()">
-                        <option value="bullish">Bullish (>50 / Rising)</option>
-                        <option value="oversold">Oversold Dip (&lt;30)</option>
-                        <option value="neutral" selected>Neutral (40 - 60)</option>
-                        <option value="overbought">Overbought Ceiling (>70)</option>
-                    </select>
+                    <label for="ma10">MA 10 Value</label>
+                    <input type="number" id="ma10" value="64950" step="any">
                 </div>
             </div>
 
-            <div class="grid-2">
+            <!-- MACD Data Output -->
+            <div class="grid-2 form-group">
                 <div>
-                    <label>Moving Averages (5 / 10)</label>
-                    <select id="maState" onchange="runMatrixEngine()">
-                        <option value="golden">Golden Cross (Price > MA5 > MA10)</option>
-                        <option value="neutral" selected>Mixed / Consolidating</option>
-                        <option value="death">Death Cross (Price &lt; MA5 &lt; MA10)</option>
-                    </select>
+                    <label for="macdValue">MACD Line (12,26)</label>
+                    <input type="number" id="macdValue" value="0.00" step="any">
                 </div>
                 <div>
-                    <label>MACD Status</label>
-                    <select id="macdState" onchange="runMatrixEngine()">
-                        <option value="bullish">Bullish Crossover / Expansions</option>
-                        <option value="flat" selected>Flat / Neutral Momentum</option>
-                        <option value="bearish">Bearish Crossover / Contraction</option>
-                    </select>
+                    <label for="macdSignal">MACD Signal (9)</label>
+                    <input type="number" id="macdSignal" value="0.00" step="any">
                 </div>
-            </div>
-        </div>
-
-        <!-- Section 2: Macro ETF Flow & Bypass Switch -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">🏛️ Institutional ETF Flow</div>
-                <span id="etfStatusBadge" class="status-badge badge-active">ETF Active</span>
             </div>
 
             <div class="form-group">
-                <label>Daily Net Inflow Status</label>
-                <select id="etfFlow" onchange="runMatrixEngine()">
-                    <option value="green">Solid Green (≥ +$100M)</option>
-                    <option value="mixed" selected>Mixed / Flat / Red (-$99M to +$99M)</option>
-                    <option value="deepRed">Deep Red (≤ -$100M)</option>
-                </select>
-            </div>
-
-            <!-- Bypass ETF Toggle Switch -->
-            <div class="toggle-container">
-                <span class="toggle-label">Bypass ETF Flow (Pure Technical Mode)</span>
-                <label class="switch">
-                    <input type="checkbox" id="bypassEtfToggle" onchange="runMatrixEngine()">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <!-- Section 3: Candle Setup Pattern -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">🕯️ Candle Setup Pattern</div>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-                <label>Price Action Location</label>
-                <select id="candlePattern" onchange="runMatrixEngine()">
-                    <option value="greenRev" selected>Green Reversal (Above Support)</option>
-                    <option value="redBreak">Red Breakdown (Below Support)</option>
-                    <option value="ceilingChase">Ceiling Chasing / Resistance Test</option>
-                    <option value="bounceReclaim">Green Breakdown Bounce (Below Support Reclaiming)</option>
-                    <option value="redPullback">Red Pullback in Uptrend (Above Support)</option>
-                    <option value="sideways">Sideways Consolidation</option>
+                <label for="candleSetup">Candle Setup Pattern</label>
+                <select id="candleSetup">
+                    <option value="Green Reversal (Above Support)" selected>Green Reversal (Above Support)</option>
+                    <option value="Red Breakdown (Below Support)">Red Breakdown (Below Support)</option>
+                    <option value="Ceiling Chasing / Resistance Test">Ceiling Chasing / Resistance Test</option>
+                    <option value="Green Breakdown Bounce (Below Support Reclaiming)">Green Breakdown Bounce (Below Support Reclaiming)</option>
+                    <option value="Red Pullback in Uptrend (Above Support)">Red Pullback in Uptrend (Above Support)</option>
+                    <option value="Sideways Consolidation">Sideways Consolidation</option>
                 </select>
             </div>
         </div>
 
-        <!-- Section 4: Decision Engine Output Matrix -->
-        <div class="card" style="margin-bottom: 0;">
-            <div class="card-header">
-                <div class="card-title">🎯 Decision Engine Output</div>
+        <button class="btn-calc" onclick="runCalculationEngine()">⚡ RUN STRATEGY EVALUATION</button>
+
+        <!-- Results Output -->
+        <div id="resultsWrapper" style="display:none;">
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-label">Position Size</div>
+                    <div class="metric-value" id="valPositionSize">$0.00</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">Trend Ratio</div>
+                    <div class="metric-value" id="valTrendRatio">1.000</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">Target Goal</div>
+                    <div class="metric-value" id="valTargetPrice">$0.00</div>
+                </div>
             </div>
 
-            <div class="output-box">
-                <div class="signal-title">Recommended Execution State</div>
-                <div id="signalStateVal" class="signal-state">ANALYZING...</div>
+            <div id="box1" class="result-card state-green">
+                <div class="res-header">Macro Strategy Mode</div>
+                <div class="res-title" id="box1Title">--</div>
+                <div class="res-message" id="box1Message">--</div>
+            </div>
 
-                <div class="metrics-grid">
-                    <div class="metric-pill">
-                        <div class="metric-pill-label">Position Sizing</div>
-                        <div id="posSizeVal" class="metric-pill-val">--</div>
-                    </div>
-                    <div class="metric-pill">
-                        <div class="metric-pill-label">Risk Profile</div>
-                        <div id="riskProfileVal" class="metric-pill-val">--</div>
-                    </div>
-                </div>
+            <div id="box2" class="result-card state-green">
+                <div class="res-header">Immediate Action Signal</div>
+                <div class="res-title" id="box2Title">--</div>
+                <div class="res-message" id="box2Message">--</div>
+            </div>
 
-                <div id="rationaleText" class="rationale">
-                    Configure your parameters above to generate a real-time risk-adjusted trading decision.
-                </div>
+            <!-- Execution Audit Log -->
+            <div class="log-section">
+                <div class="log-title">Recent Audit Log</div>
+                <ul class="log-list" id="logList"></ul>
             </div>
         </div>
 
+        <footer>
+            Standalone HTML5 App • Real-time Data Sync
+        </footer>
     </div>
 
     <script>
-        // Fetch Live Binance Spot Price
-        async function fetchBinanceData() {
+        // Live Volatility Tracker State
+        let liveVolatilityData = { dailyRangePct: 1.2, isVolatile: false };
+
+        // -------------------------------------------------------------
+        // TECHNICAL ANALYSIS CALCULATION ENGINE (RSI, MA, MACD)
+        // -------------------------------------------------------------
+        
+        function calculateRSI(closes, period) {
+            if (closes.length < period + 1) return 50;
+            let gains = 0;
+            let losses = 0;
+
+            for (let i = 1; i <= period; i++) {
+                let change = closes[i] - closes[i - 1];
+                if (change >= 0) gains += change;
+                else losses -= change;
+            }
+
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+
+            for (let i = period + 1; i < closes.length; i++) {
+                let change = closes[i] - closes[i - 1];
+                if (change >= 0) {
+                    avgGain = (avgGain * (period - 1) + change) / period;
+                    avgLoss = (avgLoss * (period - 1)) / period;
+                } else {
+                    avgGain = (avgGain * (period - 1)) / period;
+                    avgLoss = (avgLoss * (period - 1) - change) / period;
+                }
+            }
+
+            if (avgLoss === 0) return 100;
+            let rs = avgGain / avgLoss;
+            return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
+        }
+
+        function calculateSMA(closes, period) {
+            if (closes.length < period) return closes[closes.length - 1];
+            let slice = closes.slice(closes.length - period);
+            let sum = slice.reduce((a, b) => a + b, 0);
+            return parseFloat((sum / period).toFixed(2));
+        }
+
+        function calculateEMA(closes, period) {
+            if (closes.length < period) return closes[closes.length - 1];
+            let k = 2 / (period + 1);
+            let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+            for (let i = period; i < closes.length; i++) {
+                ema = (closes[i] * k) + (ema * (1 - k));
+            }
+            return ema;
+        }
+
+        function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
+            if (closes.length < slow + signal) return { macd: 0, signal: 0 };
+            
+            let macdLine = [];
+            for (let i = slow; i <= closes.length; i++) {
+                let subCloses = closes.slice(0, i);
+                let fastEma = calculateEMA(subCloses, fast);
+                let slowEma = calculateEMA(subCloses, slow);
+                macdLine.push(fastEma - slowEma);
+            }
+
+            let currentMacd = macdLine[macdLine.length - 1];
+            let currentSignal = calculateEMA(macdLine, signal);
+
+            return {
+                macd: parseFloat(currentMacd.toFixed(2)),
+                signal: parseFloat(currentSignal.toFixed(2))
+            };
+        }
+
+        // -------------------------------------------------------------
+        // AUTOMATIC TIMEFRAME TECHNICAL SYNC
+        // -------------------------------------------------------------
+
+        async function syncAllTechnicalsForTimeframe() {
+            const tf = document.getElementById('timeframe').value;
+            const badge = document.getElementById('syncBadge');
+            badge.className = 'status-badge badge-syncing';
+            badge.innerText = 'SYNCING...';
+
             try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-                const data = await res.json();
-                const price = parseFloat(data.price).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                document.getElementById('livePrice').innerText = price;
+                const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=100`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const closes = data.map(candle => parseFloat(candle[4]));
+                const latestPrice = closes[closes.length - 1];
+
+                document.getElementById('liveBtc').innerText = '$' + latestPrice.toLocaleString('en-US', {maximumFractionDigits: 2});
+                document.getElementById('priceA').value = latestPrice.toFixed(2);
+
+                autoSetLevels();
+
+                document.getElementById('rsi6').value = calculateRSI(closes, 6);
+                document.getElementById('rsi12').value = calculateRSI(closes, 12);
+                document.getElementById('rsi24').value = calculateRSI(closes, 24);
+
+                document.getElementById('ma5').value = calculateSMA(closes, 5);
+                document.getElementById('ma10').value = calculateSMA(closes, 10);
+
+                const macdRes = calculateMACD(closes, 12, 26, 9);
+                document.getElementById('macdValue').value = macdRes.macd;
+                document.getElementById('macdSignal').value = macdRes.signal;
+
+                badge.className = 'status-badge badge-success';
+                badge.innerText = `SYNCED (${tf.toUpperCase()})`;
+
+                runCalculationEngine();
+
             } catch (err) {
-                document.getElementById('livePrice').innerText = 'Offline Mode';
+                console.error("Technical Sync Error: ", err);
+                badge.className = 'status-badge';
+                badge.style.background = 'rgba(239, 68, 68, 0.2)';
+                badge.style.color = '#ef4444';
+                badge.innerText = 'SYNC ERROR';
             }
         }
 
-        // Core Decision Matrix Engine
-        function runMatrixEngine() {
-            const tf = document.getElementById('timeframe').value;
-            const rsi = document.getElementById('rsiState').value;
-            const ma = document.getElementById('maState').value;
-            const macd = document.getElementById('macdState').value;
-            const etf = document.getElementById('etfFlow').value;
-            const bypass = document.getElementById('bypassEtfToggle').checked;
-            const pattern = document.getElementById('candlePattern').value;
+        function onTimeframeChange() {
+            syncAllTechnicalsForTimeframe();
+        }
 
-            // Update UI badge for Bypass status
-            const badge = document.getElementById('etfStatusBadge');
-            if (bypass) {
-                badge.className = 'status-badge badge-bypassed';
-                badge.innerText = 'ETF Bypassed';
-            } else {
-                badge.className = 'status-badge badge-active';
-                badge.innerText = 'ETF Active';
+        function autoSetLevels() {
+            const priceA = parseFloat(document.getElementById('priceA').value) || 0;
+            const tf = document.getElementById('timeframe').value;
+
+            if (priceA <= 0) return;
+
+            let supportPct = 0.002;
+            let resistancePct = 0.01;
+
+            if (tf === '1m') { supportPct = 0.001; resistancePct = 0.005; }
+            else if (tf === '5m') { supportPct = 0.002; resistancePct = 0.01; }
+            else if (tf === '15m') { supportPct = 0.0035; resistancePct = 0.015; }
+            else if (tf === '1h') { supportPct = 0.008; resistancePct = 0.025; }
+            else if (tf === '4h') { supportPct = 0.015; resistancePct = 0.04; }
+            else if (tf === '1d') { supportPct = 0.03; resistancePct = 0.08; }
+
+            document.getElementById('pinkB').value = (priceA * (1 - supportPct)).toFixed(2);
+            document.getElementById('yellowC').value = (priceA * (1 + resistancePct)).toFixed(2);
+        }
+
+        async function fetchLiveAPIs() {
+            try {
+                const fgRes = await fetch('https://api.alternative.me/fng/');
+                const fgData = await fgRes.json();
+                const fgScore = fgData.data[0].value;
+                document.getElementById('liveFg').innerText = fgScore + '/100';
+            } catch (err) {
+                console.log('FG API Error:', err);
             }
 
-            // Technical Confluence Score
-            let techScore = 0;
-            if (rsi === 'bullish' || rsi === 'oversold') techScore += 2;
-            if (rsi === 'overbought') techScore -= 2;
-            if (ma === 'golden') techScore += 2;
-            if (ma === 'death') techScore -= 2;
-            if (macd === 'bullish') techScore += 2;
-            if (macd === 'bearish') techScore -= 2;
+            // Live Volatility Check via Binance 24hr ticker
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+                const data = await res.json();
+                const high = parseFloat(data.highPrice);
+                const low = parseFloat(data.lowPrice);
+                const rangePct = ((high - low) / low) * 100;
+                liveVolatilityData.dailyRangePct = rangePct;
+                liveVolatilityData.isVolatile = rangePct >= 3.0;
+            } catch (err) {
+                console.log('Volatility API Error:', err);
+            }
 
-            // Candle Pattern weighting
-            if (pattern === 'greenRev' || pattern === 'bounceReclaim' || pattern === 'redPullback') techScore += 2;
-            if (pattern === 'redBreak' || pattern === 'ceilingChase') techScore -= 2;
+            syncAllTechnicalsForTimeframe();
+        }
+
+        function saveParams() {
+            localStorage.setItem('btc_cap', document.getElementById('totalCapital').value);
+            localStorage.setItem('btc_risk', document.getElementById('riskPct').value);
+        }
+
+        function loadParams() {
+            if (localStorage.getItem('btc_cap')) {
+                document.getElementById('totalCapital').value = localStorage.getItem('btc_cap');
+            }
+            if (localStorage.getItem('btc_risk')) {
+                document.getElementById('riskPct').value = localStorage.getItem('btc_risk');
+            }
+        }
+
+        function logExecution(signal) {
+            const list = document.getElementById('logList');
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const item = document.createElement('li');
+            item.className = 'log-item';
+            item.innerHTML = `<span>${time} - ${signal}</span><span>$${document.getElementById('priceA').value}</span>`;
+            list.prepend(item);
+        }
+
+        // -------------------------------------------------------------
+        // STRATEGY EVALUATION ENGINE WITH BYPASS & VOLATILITY RULES
+        // -------------------------------------------------------------
+
+        function runCalculationEngine() {
+            const capital = parseFloat(document.getElementById('totalCapital').value) || 1000;
+            const riskPct = parseFloat(document.getElementById('riskPct').value) || 25;
+            let posSize = capital * (riskPct / 100);
+
+            const fedWatch = parseFloat(document.getElementById('fedwatch').value) || 0;
+            const etfFlow = document.getElementById('etfFlow').value;
+            const bypassEtf = document.getElementById('bypassEtfToggle').checked;
+            const tf = document.getElementById('timeframe').value;
+
+            const priceA = parseFloat(document.getElementById('priceA').value) || 0;
+            const pinkB = parseFloat(document.getElementById('pinkB').value) || 1;
+            const yellowC = parseFloat(document.getElementById('yellowC').value) || 1;
+
+            const rsi6 = parseFloat(document.getElementById('rsi6').value) || 50;
+            const rsi12 = parseFloat(document.getElementById('rsi12').value) || 50;
+            const rsi24 = parseFloat(document.getElementById('rsi24').value) || 50;
+
+            const ma5 = parseFloat(document.getElementById('ma5').value) || priceA;
+            const ma10 = parseFloat(document.getElementById('ma10').value) || priceA;
+
+            const macdVal = parseFloat(document.getElementById('macdValue').value) || 0;
+            const macdSig = parseFloat(document.getElementById('macdSignal').value) || 0;
+            const candleSetup = document.getElementById('candleSetup').value;
+
+            const trendRatio = priceA / pinkB;
+            const ceilingRatio = priceA / yellowC;
+            
+            // Dynamic target based on volatility
+            const isVolatile = liveVolatilityData.isVolatile;
+            const dailyRange = liveVolatilityData.dailyRangePct;
+            let profitTargetPct = isVolatile ? 0.03 : 0.01;
+            let profitTarget = priceA * (1 + profitTargetPct);
+
+            document.getElementById('valPositionSize').innerText = '$' + posSize.toFixed(2);
+            document.getElementById('valTrendRatio').innerText = trendRatio.toFixed(4);
+            document.getElementById('valTargetPrice').innerText = '$' + profitTarget.toLocaleString('en-US', {maximumFractionDigits: 2});
+
+            // Macro & Timeframe-Aware ETF Rules Evaluation
+            const box1 = document.getElementById('box1');
+            const box1Title = document.getElementById('box1Title');
+            const box1Message = document.getElementById('box1Message');
 
             let isShortTf = (tf === '1m' || tf === '5m' || tf === '15m');
-            let signal = "STAND DOWN / NO TRADE";
-            let size = "0% (Flat)";
-            let risk = "High Risk";
-            let rationale = "";
+            let macroGatePassed = true;
+            let macroMsg = "";
 
-            // Evaluate ETF constraints if not bypassed
-            let etfBlocker = false;
-            let sizeCap = 1.0; // 100%
-
-            if (!bypass) {
-                if (isShortTf) {
-                    // Short timeframes: Deep Red reduces size to 50%, never blocks completely
-                    if (etf === 'deepRed') {
-                        sizeCap = 0.5;
-                        rationale += "[Short TF] Deep Red ETF flow active: Position size scaled down 50% for risk management. ";
+            if (bypassEtf) {
+                macroMsg = " [ETF Bypassed - Pure Technical Mode Active]";
+            } else {
+                if (etfFlow === "Deep Red") {
+                    if (isShortTf) {
+                        posSize = posSize * 0.5; // Scale down 50% on short TF instead of hard block
+                        macroMsg = " [Short TF Deep Red: Size scaled down 50%]";
                     } else {
-                        rationale += "[Short TF] Intraday technical priority active. ";
+                        macroGatePassed = false;
+                        macroMsg = " [Long TF Deep Red: Gate Closed]";
                     }
-                } else {
-                    // Long timeframes (1h, 4h, 1d): Macro ETF rules apply heavily
-                    if (etf === 'deepRed') {
-                        etfBlocker = true;
-                        rationale += "[Long TF] Macro ETF Deep Red: Execution gate closed (0% size). ";
-                    } else if (etf === 'mixed') {
-                        sizeCap = 0.5;
-                        rationale += "[Long TF] Macro ETF Mixed: Range consolidation mode (50% max size). ";
-                    } else {
-                        rationale += "[Long TF] Macro ETF Solid Green: Full macro tailwind. ";
-                    }
+                } else if (etfFlow === "Mixed/Flat/Red" && !isShortTf) {
+                    posSize = posSize * 0.5; // Range cap on mixed for long TF
+                    macroMsg = " [Long TF Mixed Flow: Range Cap Active]";
                 }
-            } else {
-                rationale += "[Bypass Mode] Institutional ETF filter ignored. Pure technical execution. ";
             }
 
-            // Final Decision Logic
-            const sigEl = document.getElementById('signalStateVal');
-            const sizeEl = document.getElementById('posSizeVal');
-            const riskEl = document.getElementById('riskProfileVal');
-            const ratEl = document.getElementById('rationaleText');
+            const isGreenMacro = bypassEtf || ((fedWatch >= 75) && (etfFlow === "Solid Green" || (isShortTf && etfFlow !== "Deep Red")));
 
-            if (etfBlocker) {
-                signal = "STAND DOWN (MACRO GATE CLOSED)";
-                sigEl.style.color = "var(--red-glow)";
-                sizeEl.innerText = "0%";
-                riskEl.innerText = "Blocked";
-            } else if (techScore >= 3) {
-                signal = "HIGH CONVICTION BUY 🟢";
-                sigEl.style.color = "var(--green-glow)";
-                let calculatedSize = sizeCap === 0.5 ? "50% (Scaled)" : "100% (Full Size)";
-                sizeEl.innerText = calculatedSize;
-                riskEl.innerText = sizeCap === 0.5 ? "Moderate" : "Optimized";
-                rationale += `Technical confluence score is strong (${techScore}/8). Setup pattern (${pattern}) confirmed.`;
-            } else if (techScore >= 1) {
-                signal = "CONDITIONAL / LIGHT BUY 🟡";
-                sigEl.style.color = "var(--yellow-glow)";
-                let calculatedSize = sizeCap === 0.5 ? "25% (Half Scale)" : "50% (Standard Scalp)";
-                sizeEl.innerText = calculatedSize;
-                riskEl.innerText = "Medium-High";
-                rationale += `Moderate technical score (${techScore}/8). Proceed with tighter stop-loss.`;
+            if (!macroGatePassed) {
+                box1.className = 'result-card state-red';
+                box1Title.innerText = '🔴 MACRO GATE CLOSED (DEEP RED ETF)';
+                box1Message.innerText = `High timeframe institutional outflows block trading.${macroMsg}`;
+            } else if (isGreenMacro) {
+                box1.className = 'result-card state-green';
+                box1Title.innerText = `🟢 MACRO TIDE: BULLISH ACCUMULATION${macroMsg}`;
+                box1Message.innerText = `Institutional flow favorable. Adjusted Position Size: $${posSize.toFixed(2)}.`;
             } else {
-                signal = "NO TRADE / BEARISH BIAS 🔴";
-                sigEl.style.color = "var(--red-glow)";
-                sizeEl.innerText = "0%";
-                riskEl.innerText = "Defensive";
-                rationale += `Technical indicators show weakness or distribution setup (${techScore}/8).`;
+                box1.className = 'result-card state-yellow';
+                box1Title.innerText = `🟡 MACRO TIDE: RANGE CONSOLIDATION${macroMsg}`;
+                box1Message.innerText = `Market is sideways. Lower execution frequency and wait for support.`;
             }
 
-            sigEl.innerText = signal;
-            ratEl.innerText = rationale;
+            // Technical Confluence Checks across all 6 setups
+            const isRsiBullish = (rsi6 >= 40 && rsi6 <= 70) && (rsi12 >= 40) && (rsi24 >= 40);
+            const isMaBullish = (priceA >= ma5) && (ma5 >= ma10);
+            const isMacdBullish = (macdVal >= macdSig);
+            const isTechnicalBullish = isRsiBullish && isMaBullish && isMacdBullish;
+
+            const isBuyTrigger = (
+                (candleSetup === "Green Reversal (Above Support)" && trendRatio >= 1.000 && trendRatio <= 1.003) ||
+                (candleSetup === "Green Breakdown Bounce (Below Support Reclaiming)" && isTechnicalBullish) ||
+                (candleSetup === "Red Pullback in Uptrend (Above Support)" && isMaBullish)
+            ) && isTechnicalBullish;
+
+            const isCeilingTrap = (
+                candleSetup === "Ceiling Chasing / Resistance Test" ||
+                candleSetup === "Red Breakdown (Below Support)" ||
+                ceilingRatio >= 0.998 ||
+                rsi6 > 70
+            );
+
+            const box2 = document.getElementById('box2');
+            const box2Title = document.getElementById('box2Title');
+            const box2Message = document.getElementById('box2Message');
+
+            let actionSignal = "";
+
+            if (!macroGatePassed) {
+                box2.className = 'result-card state-red';
+                box2Title.innerText = '❌ STAND DOWN (MACRO GATE CLOSED)';
+                box2Message.innerText = 'Preserve capital on sidelines due to macro institutional restriction.';
+                actionSignal = "STAND DOWN";
+            } else if (isBuyTrigger && (isGreenMacro || bypassEtf)) {
+                box2.className = 'result-card state-green';
+                if (isVolatile) {
+                    box2Title.innerText = '🚀 HIGH VOLATILITY: TRADE & HOLD FOR 2% - 3%+ SWING';
+                    box2Message.innerText = `High volatility detected (${dailyRange.toFixed(1)}% daily range). Full confluence confirmed. Deploy $${posSize.toFixed(2)}. Target: $${profitTarget.toFixed(2)}.`;
+                } else {
+                    box2Title.innerText = '🟢 NORMAL MOMENTUM: TRADE FOR 0.5% - 1% TARGET';
+                    box2Message.innerText = `Standby range market (~${dailyRange.toFixed(1)}% daily fluctuation). Take quick profit. Deploy $${posSize.toFixed(2)}.`;
+                }
+                actionSignal = "BUY ORDER";
+            } else if (isCeilingTrap) {
+                box2.className = 'result-card state-yellow';
+                box2Title.innerText = '✋ CEILING TRAP / OVERBOUGHT WARNING';
+                box2Message.innerText = `Price testing resistance or RSI overbought (RSI6: ${rsi6}). Await a pullback to support.`;
+                actionSignal = "STAND DOWN";
+            } else {
+                box2.className = 'result-card state-yellow';
+                box2Title.innerText = '🟡 STANDBY MARKET: MICRO SCALP FOR 0.1% - 0.3% WIN';
+                box2Message.innerText = `Sideways or choppy conditions (~${dailyRange.toFixed(1)}% daily range). Restrict exposure to micro scalps or stay flat.`;
+                actionSignal = "MICRO SCALP / FLAT";
+            }
+
+            document.getElementById('resultsWrapper').style.display = 'block';
+            logExecution(actionSignal);
         }
 
-        // Run on initial load
-        window.onload = () => {
-            fetchBinanceData();
-            runMatrixEngine();
+        window.onload = function() {
+            loadParams();
+            fetchLiveAPIs();
         };
     </script>
 </body>
